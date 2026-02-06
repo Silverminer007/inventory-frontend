@@ -62,8 +62,10 @@ export default defineNuxtConfig({
         }
       ]
     },
-    workbox: {
-      navigateFallback: '/',
+    strategies: 'injectManifest',
+    srcDir: 'service-worker',
+    filename: 'sw.ts',
+    injectManifest: {
       globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}']
     },
     client: {

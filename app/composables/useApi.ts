@@ -37,6 +37,25 @@ function isOnline(): boolean {
   return typeof navigator !== 'undefined' ? navigator.onLine : true
 }
 
+async function requestBackgroundSync(): Promise<void> {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+
+  try {
+    const registration = await navigator.serviceWorker.ready
+    // Use Background Sync API if available
+    if ('sync' in registration) {
+      await (registration as any).sync.register('inventory-sync')
+      return
+    }
+  } catch {
+    // Background Sync not supported – fall through to manual trigger
+  }
+
+  // Fallback: tell the SW to sync now via postMessage
+  const registration = await navigator.serviceWorker.ready
+  registration.active?.postMessage({ type: 'TRIGGER_SYNC' })
+}
+
 export function useApi() {
   async function cacheItems(items: ItemDTO[]): Promise<void> {
     await db.items.bulkPut(items)
@@ -194,12 +213,13 @@ export function useApi() {
       const tempId = `temp-${Date.now()}`
       const entityId = parsed.entityId || tempId
 
-      // Add to sync queue
+      // Add to sync queue and request background sync
       await addToSyncQueue(parsed.entityType, entityId, operation, {
         path,
         method,
         body: options.body
       })
+      requestBackgroundSync()
 
       // Update local cache optimistically
       if (method === 'POST' || method === 'PUT') {
