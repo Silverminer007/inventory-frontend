@@ -56,3 +56,15 @@ export interface MoveContainerRequest {
 export interface MoveItemRequest {
   containerId: number | null
 }
+
+export interface ImageDTO {
+  id: number
+  itemId?: number | null
+  containerId?: number | null
+  filename: string
+  contentType: string
+  fileSize: number
+  isPrimary: boolean
+  uploadedAt: string
+  url: string
+}

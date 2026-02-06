@@ -150,6 +150,13 @@ async function refreshAll() {
         </UDropdownMenu>
       </div>
 
+      <!-- Images -->
+      <ImageGallery
+        v-if="container.id"
+        entity-type="containers"
+        :entity-id="container.id"
+      />
+
       <!-- Child containers -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-3">

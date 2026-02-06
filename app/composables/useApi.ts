@@ -171,6 +171,11 @@ export function useApi() {
     const method = (options.method?.toUpperCase() || 'GET') as HttpMethod
     const parsed = parsePath(path)
 
+    // During SSR, just do a plain fetch — no IndexedDB available
+    if (import.meta.server) {
+      return await $fetch<T>(path, { ...options })
+    }
+
     // GET requests: online-first with offline fallback
     if (method === 'GET') {
       if (isOnline()) {

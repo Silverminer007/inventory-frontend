@@ -207,6 +207,14 @@ async function save() {
       />
     </form>
 
+    <!-- Item Images (only when editing) -->
+    <ImageGallery
+      v-if="isEditing && editId"
+      entity-type="items"
+      :entity-id="Number(editId)"
+      class="mt-6"
+    />
+
     <!-- Container Form -->
     <form v-else class="space-y-4" @submit.prevent="save">
       <UFormField label="Name" required>

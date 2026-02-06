@@ -24,6 +24,13 @@ export default defineNuxtConfig({
     }
   },
 
+  icon: {
+    serverBundle: 'local',
+    clientBundle: {
+      scan: true
+    }
+  },
+
   eslint: {
     config: {
       stylistic: {
@@ -72,7 +79,7 @@ export default defineNuxtConfig({
       installPrompt: true
     },
     devOptions: {
-      enabled: true,
+      enabled: false,
       type: 'module'
     }
   }
