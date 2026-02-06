@@ -229,10 +229,11 @@ async function refreshAll() {
         </div>
 
         <div v-else class="space-y-2">
-          <div
+          <NuxtLink
             v-for="item in items"
             :key="item.id"
-            class="p-3 rounded-xl border border-default bg-default shadow-sm"
+            :to="`/items/${item.id}`"
+            class="block p-3 rounded-xl border border-default bg-default hover:bg-elevated transition-colors shadow-sm"
           >
             <div class="flex items-center gap-3">
               <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/30">
@@ -277,7 +278,7 @@ async function refreshAll() {
                 </UDropdownMenu>
               </div>
             </div>
-          </div>
+          </NuxtLink>
         </div>
       </div>
     </template>

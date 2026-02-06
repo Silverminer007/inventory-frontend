@@ -99,10 +99,11 @@ function containerIcon(type?: string) {
     <!-- Results -->
     <div v-else-if="results.length" class="space-y-2">
       <p class="text-sm text-muted mb-3">{{ results.length }} Ergebnis{{ results.length !== 1 ? 'se' : '' }}</p>
-      <div
+      <NuxtLink
         v-for="item in results"
         :key="item.id"
-        class="p-3 rounded-xl border border-default bg-default shadow-sm"
+        :to="`/items/${item.id}`"
+        class="block p-3 rounded-xl border border-default bg-default hover:bg-elevated transition-colors shadow-sm"
       >
         <div class="flex items-start gap-3">
           <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/30 shrink-0 mt-0.5">
@@ -138,7 +139,7 @@ function containerIcon(type?: string) {
           </div>
           <UBadge v-if="item.quantity > 1" :label="`${item.quantity}x`" color="neutral" variant="subtle" size="sm" />
         </div>
-      </div>
+      </NuxtLink>
     </div>
 
     <!-- Empty state -->
