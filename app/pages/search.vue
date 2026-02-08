@@ -114,14 +114,12 @@ function containerIcon(type?: string) {
             <p v-if="item.description" class="text-xs text-muted truncate">{{ item.description }}</p>
 
             <!-- Location path -->
-            <NuxtLink
-              v-if="item.container"
-              :to="`/containers/${item.container.id}`"
-              class="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline"
+            <span
+              v-if="!!item.container || !!item.locationPath"
+              class="inline-flex items-center gap-1 text-xs text-muted mt-1"
             >
-              <UIcon :name="containerIcon(item.container.type)" class="text-sm" />
               {{ item.locationPath || item.container.path || item.container.name }}
-            </NuxtLink>
+            </span>
 
             <!-- Tags -->
             <div v-if="item.tags?.length" class="flex flex-wrap gap-1 mt-1.5">
