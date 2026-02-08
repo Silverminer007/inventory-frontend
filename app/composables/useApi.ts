@@ -1,3 +1,4 @@
+import { toRaw } from 'vue'
 import { db } from '~/utils/db'
 import type { ItemDTO, ContainerDTO } from '~/types'
 import type { SyncQueueEntry } from '~/types/offline'
@@ -204,6 +205,11 @@ export function useApi() {
         return offlineData
       }
       throw new Error('No offline data available')
+    }
+
+    // Unwrap Vue reactive proxies so IndexedDB can structuredClone them
+    if (options.body) {
+      options = { ...options, body: toRaw(options.body) }
     }
 
     // Mutations: always queue to sync queue, update local cache optimistically
