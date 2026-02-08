@@ -41,9 +41,6 @@ ENV HOST=0.0.0.0
 ENV PORT=3000
 
 # Runtime config can be set via environment variables:
-# NUXT_AUTH_ISSUER
-# NUXT_AUTH_CLIENT_ID
-# NUXT_AUTH_REDIRECT_URI
-# NUXT_QUARKUS_URL
+# NUXT_API_BASE - Backend API URL (default: http://localhost:8080)
 
 CMD ["node", ".output/server/index.mjs"]

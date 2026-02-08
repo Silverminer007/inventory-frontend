@@ -18,13 +18,6 @@ export default defineNuxtConfig({
     apiBase: 'http://localhost:8080'
   },
 
-  routeRules: {
-    '/api/_nuxt_icon/**': { proxy: false },
-    '/api/v1/**': {
-      proxy: '${process.env.API_URL}/api/v1/**'
-    }
-  },
-
   icon: {
     serverBundle: 'local',
     clientBundle: {
