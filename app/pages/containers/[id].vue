@@ -138,11 +138,11 @@ async function refreshAll() {
         <UDropdownMenu
           :items="[
             [
-              { label: 'Bearbeiten', icon: 'i-lucide-pencil', click: () => showEditModal = true },
-              { label: 'Verschieben', icon: 'i-lucide-move', click: () => showMoveModal = true }
+              { label: 'Bearbeiten', icon: 'i-lucide-pencil', onSelect: () => showEditModal = true },
+              { label: 'Verschieben', icon: 'i-lucide-move', onSelect: () => showMoveModal = true }
             ],
             [
-              { label: 'Loeschen', icon: 'i-lucide-trash-2', color: 'error' as const, click: () => showDeleteConfirm = true }
+              { label: 'Loeschen', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => showDeleteConfirm = true }
             ]
           ]"
         >
@@ -258,11 +258,11 @@ async function refreshAll() {
                 <UDropdownMenu
                   :items="[
                     [
-                      { label: 'Bearbeiten', icon: 'i-lucide-pencil', click: () => navigateTo(`/add?edit=${item.id}`) },
-                      { label: 'Verschieben', icon: 'i-lucide-move', click: () => openMoveItem(item.id!) }
+                      { label: 'Bearbeiten', icon: 'i-lucide-pencil', onSelect: () => navigateTo(`/add?edit=${item.id}`) },
+                      { label: 'Verschieben', icon: 'i-lucide-move', onSelect: () => openMoveItem(item.id!) }
                     ],
                     [
-                      { label: 'Loeschen', icon: 'i-lucide-trash-2', color: 'error' as const, click: async () => {
+                      { label: 'Loeschen', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: async () => {
                         try {
                           await useItems().remove(item.id!)
                           toast.add({ title: 'Geloescht', color: 'success' })
