@@ -107,7 +107,6 @@ async function doMove() {
               <span class="text-sm font-medium" :class="root.id === sourceId ? 'text-muted line-through' : ''">
                 {{ root.name }}
               </span>
-              <UBadge v-if="root.locationType === 'TEMPORARY'" label="Temp" color="amber" variant="subtle" size="xs" />
             </button>
             <!-- Level 2 -->
             <template v-for="child in getChildrenOf(root.id!)" :key="child.id">

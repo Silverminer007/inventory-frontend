@@ -119,13 +119,6 @@ async function refreshAll() {
             <div class="flex gap-2 mt-1">
               <UBadge :label="container.containerType" color="neutral" variant="subtle" size="sm" />
               <UBadge
-                v-if="container.locationType === 'TEMPORARY'"
-                label="Temporaer"
-                color="amber"
-                variant="subtle"
-                size="sm"
-              />
-              <UBadge
                 v-if="container.position"
                 :label="`Position: ${container.position}`"
                 color="neutral"
@@ -191,13 +184,6 @@ async function refreshAll() {
                 <p class="font-medium truncate">{{ child.name }}</p>
                 <p v-if="child.description" class="text-xs text-muted truncate">{{ child.description }}</p>
               </div>
-              <UBadge
-                v-if="child.locationType === 'TEMPORARY'"
-                label="Temp"
-                color="amber"
-                variant="subtle"
-                size="xs"
-              />
               <span v-if="child.totalItemCount" class="text-xs text-muted">{{ child.totalItemCount }}</span>
               <UIcon name="i-lucide-chevron-right" class="text-muted" />
             </div>

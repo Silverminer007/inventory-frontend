@@ -16,7 +16,6 @@ export interface ContainerDTO {
   name: string
   description?: string
   containerType: string
-  locationType?: string
   location?: string
   position?: string
   qrCode?: string

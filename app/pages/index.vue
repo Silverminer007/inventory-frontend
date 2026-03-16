@@ -63,13 +63,6 @@ function containerIcon(type: string) {
           </div>
           <UIcon name="i-lucide-chevron-right" class="text-muted" />
         </div>
-        <UBadge
-          v-if="room.locationType === 'TEMPORARY'"
-          label="Temporaer"
-          color="amber"
-          variant="subtle"
-          class="mt-2"
-        />
       </NuxtLink>
     </div>
   </div>

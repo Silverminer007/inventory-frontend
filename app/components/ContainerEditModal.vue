@@ -18,7 +18,6 @@ const form = reactive<ContainerDTO>({
   name: '',
   description: '',
   containerType: 'ROOM',
-  locationType: 'PERMANENT',
   position: '',
   parentContainerId: null,
   version: 0
@@ -32,18 +31,12 @@ watch(open, (val) => {
       name: props.container.name,
       description: props.container.description || '',
       containerType: props.container.containerType,
-      locationType: props.container.locationType || 'PERMANENT',
       position: props.container.position || '',
       parentContainerId: props.container.parentContainerId,
       version: props.container.version
     })
   }
 })
-
-const locationTypeOptions = [
-  { label: 'Permanent', value: 'PERMANENT' },
-  { label: 'Temporaer', value: 'TEMPORARY' }
-]
 
 async function save() {
   if (!props.container.id) return
@@ -73,15 +66,6 @@ async function save() {
 
           <UFormField label="Beschreibung">
             <UTextarea v-model="form.description" class="w-full" />
-          </UFormField>
-
-          <UFormField label="Standort-Typ">
-            <USelectMenu
-              v-model="form.locationType"
-              :items="locationTypeOptions"
-              value-key="value"
-              class="w-full"
-            />
           </UFormField>
 
           <UFormField label="Position">

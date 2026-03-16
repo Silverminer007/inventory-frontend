@@ -75,11 +75,6 @@ const containerTypeOptions = [
   { label: 'Kiste', value: 'BOX' }
 ]
 
-const locationTypeOptions = [
-  { label: 'Permanent', value: 'PERMANENT' },
-  { label: 'Temporaer', value: 'TEMPORARY' }
-]
-
 const parentOptions = computed(() => {
   return [
     { label: '-- Kein Eltern-Container (Root) --', value: null as number | null },
@@ -229,15 +224,6 @@ async function save() {
         <USelectMenu
           v-model="containerForm.containerType"
           :items="containerTypeOptions"
-          value-key="value"
-          class="w-full"
-        />
-      </UFormField>
-
-      <UFormField label="Standort-Typ">
-        <USelectMenu
-          v-model="containerForm.locationType"
-          :items="locationTypeOptions"
           value-key="value"
           class="w-full"
         />
