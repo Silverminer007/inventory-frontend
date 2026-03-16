@@ -16,14 +16,28 @@ export function useItems() {
     )
   }
 
-  async function search(query: string): Promise<ItemDTO[]> {
+  async function search(query: string, tags?: string[]): Promise<ItemDTO[]> {
     return await apiFetch<ItemDTO[]>(`${base}/search`, {
-      params: { q: query }
+      params: { q: query || undefined, tags: tags?.length ? tags : undefined }
     })
   }
 
   async function getByTag(tag: string): Promise<ItemDTO[]> {
     return await apiFetch<ItemDTO[]>(`${base}/by-tag/${encodeURIComponent(tag)}`)
+  }
+
+  async function suggestTags(itemName: string): Promise<string[]> {
+    const response = await apiFetch<string[]>(`${base}/tags/suggest`, {
+      params: { item: itemName }
+    })
+    console.log(response[0])
+    return response
+  }
+
+  async function searchTags(query?: string): Promise<string[]> {
+    const params: Record<string, string> = {}
+    if (query?.trim()) params.q = query
+    return await apiFetch<string[]>(`${base}/tags`, { params })
   }
 
   async function create(item: ItemDTO) {
@@ -53,5 +67,5 @@ export function useItems() {
     })
   }
 
-  return { getAll, getById, search, getByTag, create, update, remove, move }
+  return { getAll, getById, search, getByTag, searchTags, suggestTags, create, update, remove, move }
 }

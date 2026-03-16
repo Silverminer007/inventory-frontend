@@ -1,65 +1,109 @@
 <script setup lang="ts">
 import type { ItemDTO } from '~/types'
 
-const { search, getByTag } = useItems()
+const { search, searchTags } = useItems()
 
 const query = ref('')
-const activeTag = ref<string | null>(null)
+const selectedTags = ref<string[]>([])
 const results = ref<ItemDTO[]>([])
 const loading = ref(false)
 const searched = ref(false)
 
+// Tag picker state
+const tagQuery = ref('')
+const tagSuggestions = ref<string[]>([])
+const tagLoading = ref(false)
+const allTagsCache = ref<string[] | null>(null)
+
+// --- Search logic ---
+
 let debounceTimer: ReturnType<typeof setTimeout>
 
-watch(query, (val) => {
-  activeTag.value = null
+watch([query, selectedTags], () => {
   clearTimeout(debounceTimer)
-  if (!val.trim()) {
+  const q = query.value.trim()
+  const tags = selectedTags.value
+
+  if (!q && !tags.length) {
     results.value = []
     searched.value = false
     return
   }
+
   debounceTimer = setTimeout(async () => {
     loading.value = true
     searched.value = true
     try {
-      results.value = await search(val)
+      results.value = await search(q, tags)
     } finally {
       loading.value = false
     }
   }, 300)
-})
+}, { deep: true })
 
-async function searchByTag(tag: string) {
-  if (activeTag.value === tag) {
-    activeTag.value = null
-    results.value = []
-    searched.value = false
+// --- Tag picker logic ---
+
+let tagDebounceTimer: ReturnType<typeof setTimeout>
+
+watch(tagQuery, (val) => {
+  clearTimeout(tagDebounceTimer)
+  if (!val?.trim() && allTagsCache.value) {
+    tagSuggestions.value = allTagsCache.value
     return
   }
-  activeTag.value = tag
-  query.value = ''
-  loading.value = true
-  searched.value = true
+  tagDebounceTimer = setTimeout(async () => {
+    tagLoading.value = true
+    try {
+      tagSuggestions.value = await searchTags(val || undefined)
+      if (!val?.trim()) {
+        allTagsCache.value = tagSuggestions.value
+      }
+    } finally {
+      tagLoading.value = false
+    }
+  }, 200)
+})
+
+async function loadAllTags() {
+  if (allTagsCache.value) {
+    tagSuggestions.value = allTagsCache.value
+    return
+  }
+  tagLoading.value = true
   try {
-    results.value = await getByTag(tag)
+    allTagsCache.value = await searchTags()
+    tagSuggestions.value = allTagsCache.value
   } finally {
-    loading.value = false
+    tagLoading.value = false
   }
 }
 
-const allTags = computed(() => {
-  const tags = new Set<string>()
-  results.value.forEach(item => item.tags?.forEach(t => tags.add(t)))
-  return Array.from(tags).sort()
-})
+const filteredTagSuggestions = computed(() =>
+  tagSuggestions.value.filter(t => !selectedTags.value.includes(t))
+)
 
-function containerIcon(type?: string) {
-  switch (type) {
-    case 'ROOM': return 'i-lucide-door-open'
-    case 'SHELF': return 'i-lucide-rows-3'
-    case 'BOX': return 'i-lucide-box'
-    default: return 'i-lucide-folder'
+// --- Tag actions ---
+
+function onTagSelect(tag: string) {
+  if (tag && !selectedTags.value.includes(tag)) {
+    selectedTags.value.push(tag)
+    tagQuery.value = ''
+  }
+}
+
+function toggleTag(tag: string) {
+  const idx = selectedTags.value.indexOf(tag)
+  if (idx >= 0) {
+    selectedTags.value.splice(idx, 1)
+  } else {
+    selectedTags.value.push(tag)
+  }
+}
+
+function removeTag(tag: string) {
+  const idx = selectedTags.value.indexOf(tag)
+  if (idx >= 0) {
+    selectedTags.value.splice(idx, 1)
   }
 }
 </script>
@@ -68,27 +112,53 @@ function containerIcon(type?: string) {
   <div class="p-4 max-w-3xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">Suche</h1>
 
+    <!-- Text search -->
     <UInput
       v-model="query"
       placeholder="Gegenstand suchen..."
       icon="i-lucide-search"
       size="lg"
       autofocus
-      class="mb-4"
+      class="mb-3 pr-3"
     />
 
-    <!-- Tag pills -->
-    <div v-if="allTags.length" class="flex flex-wrap gap-2 mb-4">
+    <!-- Tag picker -->
+    <UInputMenu
+      :model-value="undefined"
+      v-model:search-term="tagQuery"
+      :items="filteredTagSuggestions"
+      ignore-filter
+      placeholder="Tag suchen..."
+      icon="i-lucide-tag"
+      :loading="tagLoading"
+      open-on-focus
+      reset-search-term-on-select
+      class="mb-3"
+      @update:model-value="onTagSelect"
+      size="lg"
+      @focus="loadAllTags"
+    >
+      <template #empty>
+        <span class="text-sm text-muted p-2">Keine Tags gefunden</span>
+      </template>
+    </UInputMenu>
+
+    <!-- Selected tags -->
+    <div v-if="selectedTags.length" class="flex flex-wrap gap-2 mb-4">
       <UBadge
-        v-for="tag in allTags"
+        v-for="tag in selectedTags"
         :key="tag"
         :label="tag"
-        :color="activeTag === tag ? 'primary' : 'neutral'"
-        :variant="activeTag === tag ? 'solid' : 'subtle'"
+        color="primary"
+        variant="solid"
         size="sm"
         class="cursor-pointer"
-        @click="searchByTag(tag)"
-      />
+        @click="removeTag(tag)"
+      >
+        <template #trailing>
+          <UIcon name="i-lucide-x" class="text-xs" />
+        </template>
+      </UBadge>
     </div>
 
     <!-- Loading -->
@@ -128,10 +198,10 @@ function containerIcon(type?: string) {
                 :key="tag"
                 :label="tag"
                 color="primary"
-                variant="subtle"
+                :variant="selectedTags.includes(tag) ? 'solid' : 'subtle'"
                 size="xs"
                 class="cursor-pointer"
-                @click="searchByTag(tag)"
+                @click.prevent.stop="toggleTag(tag)"
               />
             </div>
           </div>

@@ -79,6 +79,12 @@ export function useApi() {
   }
 
   async function getOfflineItems(subPath: string | null): Promise<ItemDTO[]> {
+    if (subPath === 'tags') {
+      const items = await db.items.toArray()
+      const tags = new Set<string>()
+      items.forEach(item => item.tags?.forEach(t => tags.add(t)))
+      return Array.from(tags).sort() as any
+    }
     if (subPath === 'search' || subPath?.startsWith('by-tag')) {
       // For search/tag queries offline, return all items (client can filter)
       return await db.items.toArray()
@@ -152,6 +158,7 @@ export function useApi() {
 
   async function cacheResponse<T>(parsed: ParsedPath, data: T, _subPath: string | null): Promise<void> {
     if (parsed.entityType === 'item') {
+      if (parsed.subPath === 'tags') return
       if (Array.isArray(data)) {
         await cacheItems(data as unknown as ItemDTO[])
       } else if (data && typeof data === 'object') {
