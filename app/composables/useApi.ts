@@ -212,19 +212,44 @@ export function useApi() {
       options = { ...options, body: toRaw(options.body) }
     }
 
-    // Mutations: always queue to sync queue, update local cache optimistically
+    // Mutations: try direct API call when online, fall back to sync queue when offline
     if (parsed.entityType && (method === 'POST' || method === 'PUT' || method === 'DELETE')) {
+      if (isOnline()) {
+        try {
+          const result = await $fetch<T>(path, { ...options })
+
+          // Cache the server response
+          if (parsed.entityType && result && (method === 'POST' || method === 'PUT')) {
+            await cacheResponse(parsed, result, parsed.subPath)
+          }
+          if (method === 'DELETE' && parsed.entityId) {
+            if (parsed.entityType === 'item') {
+              await db.items.delete(parsed.entityId)
+            } else {
+              await db.containers.delete(parsed.entityId)
+            }
+          }
+
+          return result
+        } catch (error) {
+          // Network error – fall through to offline/sync queue path
+          if (!(error instanceof Error && error.message.includes('fetch'))) {
+            throw error
+          }
+          console.warn('Network error on mutation, queueing for sync')
+        }
+      }
+
+      // Offline or network failure: queue for background sync
       const operation = method === 'POST'
         ? (parsed.subPath === 'move' ? 'move' : 'create')
         : method === 'PUT'
           ? 'update'
           : 'delete'
 
-      // Generate temp ID for new entities
       const tempId = `temp-${Date.now()}`
       const entityId = parsed.entityId || tempId
 
-      // Add to sync queue and request background sync
       await addToSyncQueue(parsed.entityType, entityId, operation, {
         path,
         method,
@@ -246,7 +271,6 @@ export function useApi() {
             if (entity.id) {
               await db.items.put(entity)
             } else {
-              // For new items, add with temp marker
               const newId = await db.items.add(entity)
               return { ...entity, id: newId } as T
             }
@@ -269,7 +293,6 @@ export function useApi() {
         }
       }
 
-      // Return optimistic result
       if (options.body) {
         return { ...options.body, id: parsed.entityId } as T
       }
