@@ -2,7 +2,7 @@
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 import { clientsClaim } from 'workbox-core'
 import { registerRoute } from 'workbox-routing'
-import { NetworkFirst } from 'workbox-strategies'
+import { CacheFirst, NetworkFirst } from 'workbox-strategies'
 import Dexie from 'dexie'
 
 declare const self: ServiceWorkerGlobalScope
@@ -12,6 +12,12 @@ cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
 self.skipWaiting()
 clientsClaim()
+
+// Serve cached images immediately (uploaded images are immutable)
+registerRoute(
+  ({ request }) => request.destination === 'image',
+  new CacheFirst({ cacheName: 'image-cache' })
+)
 
 // Cache API GET requests with network-first strategy
 registerRoute(
