@@ -65,6 +65,10 @@ export function useOfflineDb() {
     return await db.syncQueue.where('status').equals('pending').toArray()
   }
 
+  async function getAllSyncEntries(): Promise<SyncQueueEntry[]> {
+    return await db.syncQueue.orderBy('timestamp').toArray()
+  }
+
   async function updateSyncEntryStatus(id: number, status: SyncQueueEntry['status']): Promise<void> {
     await db.syncQueue.update(id, { status })
   }
@@ -95,6 +99,7 @@ export function useOfflineDb() {
     // Sync Queue
     addToSyncQueue,
     getPendingSyncEntries,
+    getAllSyncEntries,
     updateSyncEntryStatus,
     removeSyncEntry,
     clearSyncQueue
