@@ -24,6 +24,7 @@ useSeoMeta({
 })
 
 const route = useRoute()
+const { showIndicator } = useSync()
 
 const tabs = [
   { path: '/', icon: 'i-lucide-home', label: 'Raeume' },
@@ -39,7 +40,7 @@ function isActiveTab(path: string) {
 
 <template>
   <UApp>
-    <div class="min-h-screen pb-16 md:pb-0 md:pl-56">
+    <div class="min-h-screen md:pl-56" :class="showIndicator ? 'pb-24 md:pb-0' : 'pb-16 md:pb-0'">
       <!-- Desktop sidebar -->
       <aside class="hidden md:flex fixed inset-y-0 left-0 z-40 w-56 flex-col border-r border-default bg-default">
         <div class="flex items-center gap-2 px-4 h-14 border-b border-default">
@@ -58,6 +59,17 @@ function isActiveTab(path: string) {
             {{ tab.label }}
           </NuxtLink>
         </nav>
+        <div class="p-3 border-t border-default space-y-1">
+          <OfflineIndicator />
+          <NuxtLink
+            to="/admin/debug"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            :class="route.path.startsWith('/admin') ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-elevated'"
+          >
+            <UIcon name="i-lucide-bug" class="text-lg" />
+            Debug
+          </NuxtLink>
+        </div>
       </aside>
 
       <!-- Main content -->
@@ -67,6 +79,9 @@ function isActiveTab(path: string) {
 
       <!-- Mobile bottom tabs -->
       <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-default bg-default safe-bottom">
+        <ClientOnly>
+          <OfflineIndicator class="mx-3 mt-2" />
+        </ClientOnly>
         <div class="flex">
           <NuxtLink
             v-for="tab in tabs"
