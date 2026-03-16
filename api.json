@@ -4,8 +4,14 @@
     "name" : "Containers",
     "description" : "Container management endpoints"
   }, {
+    "name" : "Images",
+    "description" : "Image upload and management endpoints"
+  }, {
     "name" : "Items",
     "description" : "Item management endpoints"
+  }, {
+    "name" : "Synonyms",
+    "description" : "Synonym management endpoints"
   } ],
   "components" : {
     "schemas" : {
@@ -189,6 +195,24 @@
           },
           "containerType" : {
             "type" : "string"
+          }
+        }
+      },
+      "SynonymDTO" : {
+        "type" : "object",
+        "required" : [ "canonicalTerm", "synonym" ],
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "canonicalTerm" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "synonym" : {
+            "type" : "string",
+            "pattern" : "\\S"
           }
         }
       }
@@ -375,6 +399,74 @@
         }
       }
     },
+    "/api/v1/containers/{id}/images" : {
+      "post" : {
+        "summary" : "Upload image for container",
+        "tags" : [ "Images" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  },
+                  "isPrimary" : {
+                    "type" : "boolean",
+                    "default" : false
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        }
+      },
+      "get" : {
+        "summary" : "List images for container",
+        "tags" : [ "Images" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/containers/{id}/move" : {
       "post" : {
         "summary" : "Move container to new parent",
@@ -409,6 +501,54 @@
           },
           "400" : {
             "description" : "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/v1/images/{imageId}" : {
+      "get" : {
+        "summary" : "Get image metadata",
+        "tags" : [ "Images" ],
+        "parameters" : [ {
+          "name" : "imageId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "summary" : "Delete image",
+        "tags" : [ "Images" ],
+        "parameters" : [ {
+          "name" : "imageId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           }
         }
       }
@@ -590,6 +730,74 @@
         }
       }
     },
+    "/api/v1/items/{id}/images" : {
+      "post" : {
+        "summary" : "Upload image for item",
+        "tags" : [ "Images" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  },
+                  "isPrimary" : {
+                    "type" : "boolean",
+                    "default" : false
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        }
+      },
+      "get" : {
+        "summary" : "List images for item",
+        "tags" : [ "Images" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/items/{id}/move" : {
       "post" : {
         "summary" : "Move item to different container",
@@ -624,6 +832,75 @@
           },
           "400" : {
             "description" : "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/v1/synonyms" : {
+      "get" : {
+        "summary" : "Get all synonyms",
+        "description" : "Returns all synonyms (global + user-specific)",
+        "tags" : [ "Synonyms" ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "summary" : "Create synonym pair",
+        "tags" : [ "Synonyms" ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SynonymDTO"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/v1/synonyms/{id}" : {
+      "delete" : {
+        "summary" : "Delete synonym pair",
+        "tags" : [ "Synonyms" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           }
         }
       }
