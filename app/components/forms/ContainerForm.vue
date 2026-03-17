@@ -51,6 +51,7 @@ function removeFile(index: number) {
 }
 
 async function submit() {
+  if (isSubmitting.value) return
   if (!name.value.trim()) { error.value = 'Name ist erforderlich'; return }
   isSubmitting.value = true
   error.value = null

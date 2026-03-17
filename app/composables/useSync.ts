@@ -13,6 +13,7 @@ import { useDatabase } from '~/composables/useDatabase'
 // ─── Module-level reactive state (shared across all composable instances) ──────
 
 const isSyncing: Ref<boolean> = ref(false)
+const isFlushing: Ref<boolean> = ref(false)
 const syncProgress: Ref<{ current: number; total: number } | null> = ref(null)
 const lastSyncAt: Ref<Date | null> = ref(null)
 const pendingCommandCount: Ref<number> = ref(0)
@@ -220,87 +221,103 @@ export function useSync() {
   const BATCH_SIZE = 50
 
   async function flushQueue(): Promise<void> {
-    const pending = await db.getPendingCommands()
-    if (pending.length === 0) return
+    if (isFlushing.value) return
+    isFlushing.value = true
 
-    // Mark all as SENT before sending
-    for (const cmd of pending) {
-      await db.updateCommandStatus(cmd.commandId, 'SENT')
-    }
+    try {
+      const pending = await db.getPendingCommands()
+      if (pending.length === 0) return
 
-    // Process in batches
-    for (let i = 0; i < pending.length; i += BATCH_SIZE) {
-      const batch = pending.slice(i, i + BATCH_SIZE)
-      const payload = batch.map(entry => ({
-        commandId: entry.commandId,
-        commandType: entry.commandType,
-        payloadVersion: 1 as const,
-        payload: entry.payload,
-        entityId: entry.entityId ?? undefined,
-        issuedAt: entry.createdAt
-      }))
+      // Mark all as SENT before sending
+      for (const cmd of pending) {
+        await db.updateCommandStatus(cmd.commandId, 'SENT')
+      }
 
-      let results: CommandResultDTO[]
+      // Process in batches
+      for (let i = 0; i < pending.length; i += BATCH_SIZE) {
+        const batch = pending.slice(i, i + BATCH_SIZE)
+        const payload = batch.map(entry => ({
+          commandId: entry.commandId,
+          commandType: entry.commandType,
+          payloadVersion: 1 as const,
+          payload: entry.payload,
+          entityId: entry.entityId ?? undefined,
+          issuedAt: entry.createdAt
+        }))
 
-      try {
-        const res = await fetch(`${apiBase}/commands`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
+        let results: CommandResultDTO[]
 
-        if (!res.ok) {
+        try {
+          const res = await fetch(`${apiBase}/commands`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+
+          if (!res.ok) {
+            for (const cmd of batch) {
+              await db.updateCommandStatus(cmd.commandId, 'FAILED', {
+                error: `HTTP ${res.status}`
+              })
+            }
+            continue
+          }
+
+          results = await res.json()
+        } catch {
+          // Network error — revert to PENDING so retry is possible
           for (const cmd of batch) {
-            await db.updateCommandStatus(cmd.commandId, 'FAILED', {
-              error: `HTTP ${res.status}`
-            })
+            await db.updateCommandStatus(cmd.commandId, 'PENDING')
           }
           continue
         }
 
-        results = await res.json()
-      } catch {
-        // Network error — revert to PENDING so retry is possible
+        // Map results back by commandId
+        const resultMap = new Map(results.map(r => [r.commandId, r]))
+
         for (const cmd of batch) {
-          await db.updateCommandStatus(cmd.commandId, 'PENDING')
+          const result = resultMap.get(cmd.commandId)
+          if (!result) continue
+
+          if (result.status === 'APPLIED') {
+            const serverId = result.entityId ?? cmd.entityId
+            await db.updateCommandStatus(cmd.commandId, 'APPLIED', {
+              entityId: serverId
+            })
+            // Sync the server snapshot; if server assigned a different ID than the
+            // client-generated one, remove the stale optimistic entity to prevent duplicates
+            await applyResultToDb(result)
+            if (serverId && cmd.entityId && serverId !== cmd.entityId) {
+              if (cmd.commandType === 'CONTAINER_CREATE') {
+                await db.deleteContainer(cmd.entityId)
+              } else if (cmd.commandType === 'ITEM_CREATE') {
+                await db.deleteItem(cmd.entityId)
+              }
+            }
+          } else if (result.status === 'CONFLICT') {
+            await db.updateCommandStatus(cmd.commandId, 'CONFLICT', {
+              conflictInfo: result.conflictInfo ?? undefined,
+              error: result.error ?? undefined
+            })
+          } else {
+            await db.updateCommandStatus(cmd.commandId, 'FAILED', {
+              error: result.error ?? undefined
+            })
+            // Roll back failed CREATE — server rejected our UUID
+            if (cmd.commandType === 'ITEM_CREATE' && cmd.entityId) {
+              await db.deleteItem(cmd.entityId)
+            }
+            if (cmd.commandType === 'CONTAINER_CREATE' && cmd.entityId) {
+              await db.deleteContainer(cmd.entityId)
+            }
+          }
         }
-        continue
       }
 
-      // Map results back by commandId
-      const resultMap = new Map(results.map(r => [r.commandId, r]))
-
-      for (const cmd of batch) {
-        const result = resultMap.get(cmd.commandId)
-        if (!result) continue
-
-        if (result.status === 'APPLIED') {
-          await db.updateCommandStatus(cmd.commandId, 'APPLIED', {
-            entityId: result.entityId ?? cmd.entityId
-          })
-          // Local entity already has correct UUID — just sync the server snapshot
-          await applyResultToDb(result)
-        } else if (result.status === 'CONFLICT') {
-          await db.updateCommandStatus(cmd.commandId, 'CONFLICT', {
-            conflictInfo: result.conflictInfo ?? undefined,
-            error: result.error ?? undefined
-          })
-        } else {
-          await db.updateCommandStatus(cmd.commandId, 'FAILED', {
-            error: result.error ?? undefined
-          })
-          // Roll back failed CREATE — server rejected our UUID
-          if (cmd.commandType === 'ITEM_CREATE' && cmd.entityId) {
-            await db.deleteItem(cmd.entityId)
-          }
-          if (cmd.commandType === 'CONTAINER_CREATE' && cmd.entityId) {
-            await db.deleteContainer(cmd.entityId)
-          }
-        }
-      }
+      await refreshPendingCount()
+    } finally {
+      isFlushing.value = false
     }
-
-    await refreshPendingCount()
   }
 
   // ─── Bootstrap ─────────────────────────────────────────────────────────────

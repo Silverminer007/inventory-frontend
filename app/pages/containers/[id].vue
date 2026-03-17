@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, resolveComponent } from 'vue'
+import { ref, computed, onMounted, watch, resolveComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDatabase } from '~/composables/useDatabase'
 import { useSync } from '~/composables/useSync'
@@ -7,6 +7,7 @@ import { useImages } from '~/composables/useImages'
 import { containerConfig, getBreadcrumb, getAddableChildTypes } from '~/utils/containerUtils'
 import type { Container, LocalItem, Image } from '~/types/inventory'
 import type { ContainerType } from '~/utils/containerUtils'
+import type { UUID } from '~/utils/uuid'
 import type { PrintSize } from '~/components/PrintSizeSelector.vue'
 
 const route = useRoute()
@@ -30,13 +31,13 @@ const primaryImage = computed(() => images.value.find(i => i.isPrimary) ?? image
 
 // ─── Multi-select ─────────────────────────────────────────────────────────────
 const isSelecting = ref(false)
-const selectedContainerIds = ref<number[]>([])
-const selectedItemIds = ref<number[]>([])
+const selectedContainerIds = ref<UUID[]>([])
+const selectedItemIds = ref<UUID[]>([])
 const showPrintSize = ref(false)
 
 const totalSelected = computed(() => selectedContainerIds.value.length + selectedItemIds.value.length)
 
-function toggleContainer(cId: number) {
+function toggleContainer(cId: UUID) {
   const idx = selectedContainerIds.value.indexOf(cId)
   if (idx === -1) {
     selectedContainerIds.value = [...selectedContainerIds.value, cId]
@@ -45,7 +46,7 @@ function toggleContainer(cId: number) {
   }
 }
 
-function toggleItem(iId: number) {
+function toggleItem(iId: UUID) {
   const idx = selectedItemIds.value.indexOf(iId)
   if (idx === -1) {
     selectedItemIds.value = [...selectedItemIds.value, iId]
@@ -164,6 +165,8 @@ function onContainerUpdated(updated: Container) {
 }
 
 onMounted(loadData)
+// Vue Router reuses this component when navigating between containers — reload on ID change
+watch(id, loadData)
 </script>
 
 <template>
