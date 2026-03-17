@@ -1,10 +1,18 @@
+import tailwindcss from '@tailwindcss/vite'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
-    '@nuxt/eslint',
-    '@nuxt/ui',
-    '@vite-pwa/nuxt'
+    '@nuxt/eslint'
   ],
+
+  components: [
+    { path: '~/components/ui', prefix: '' },
+    { path: '~/components/forms', prefix: '' },
+    '~/components'
+  ],
+
+  ssr: false,
 
   devtools: {
     enabled: true
@@ -14,14 +22,37 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-01-15',
 
-  runtimeConfig: {
-    apiBase: 'http://localhost:8080'
+  vite: {
+    plugins: [
+      tailwindcss()
+    ],
+    server: {
+      hmr: {
+        clientPort: 3000
+      }
+    }
   },
 
-  icon: {
-    serverBundle: 'local',
-    clientBundle: {
-      scan: true
+  runtimeConfig: {
+    public: {
+      apiBase: 'http://localhost:8080'
+    }
+  },
+
+  app: {
+    head: {
+      title: 'Lager',
+      meta: [
+        { name: 'theme-color', content: '#64748b' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+        { name: 'apple-mobile-web-app-title', content: 'Lager' }
+      ],
+      link: [
+        { rel: 'manifest', href: '/manifest.webmanifest' }
+      ]
     }
   },
 
@@ -31,50 +62,6 @@ export default defineNuxtConfig({
         commaDangle: 'never',
         braceStyle: '1tbs'
       }
-    }
-  },
-
-  pwa: {
-    registerType: 'autoUpdate',
-    manifest: {
-      name: 'Inventory',
-      short_name: 'Inventory',
-      description: 'Inventory management application',
-      theme_color: '#3b82f6',
-      background_color: '#ffffff',
-      display: 'standalone',
-      orientation: 'portrait',
-      icons: [
-        {
-          src: 'pwa-192x192.png',
-          sizes: '192x192',
-          type: 'image/png'
-        },
-        {
-          src: 'pwa-512x512.png',
-          sizes: '512x512',
-          type: 'image/png'
-        },
-        {
-          src: 'pwa-512x512.png',
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'maskable'
-        }
-      ]
-    },
-    strategies: 'injectManifest',
-    srcDir: 'service-worker',
-    filename: 'sw.ts',
-    injectManifest: {
-      globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}']
-    },
-    client: {
-      installPrompt: true
-    },
-    devOptions: {
-      enabled: false,
-      type: 'module'
     }
   }
 })

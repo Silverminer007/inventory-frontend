@@ -1,0 +1,316 @@
+@import "tailwindcss";
+
+/* ─── Light Mode (default) ───────────────────────────────────────────────────── */
+
+:root {
+  /* Surfaces */
+  --color-surface-0: #ffffff;
+  --color-surface-1: #f8fafc;
+  --color-surface-2: #f1f5f9;
+
+  /* Borders */
+  --color-border: #e2e8f0;
+
+  /* Text */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+
+  /* Semantic */
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  /* Focus ring */
+  --color-focus-ring: rgba(59, 130, 246, 0.15);
+
+  /* Nav active item */
+  --color-nav-active-bg: #dbeafe;
+  --color-nav-active-text: #1d4ed8;
+
+  /* Badges */
+  --badge-blue-bg: #dbeafe;   --badge-blue-text: #1d4ed8;
+  --badge-green-bg: #dcfce7;  --badge-green-text: #15803d;
+  --badge-amber-bg: #fef3c7;  --badge-amber-text: #b45309;
+  --badge-red-bg: #fee2e2;    --badge-red-text: #b91c1c;
+  --badge-slate-bg: #f1f5f9;  --badge-slate-text: #334155;
+  --badge-purple-bg: #f3e8ff; --badge-purple-text: #7e22ce;
+  --badge-default-bg: #f1f5f9; --badge-default-text: #475569;
+
+  /* Danger banner */
+  --color-danger-bg: #fee2e2;
+  --color-danger-border: #fca5a5;
+  --color-danger-text: #b91c1c;
+
+  /* Backdrop */
+  --color-backdrop: rgba(0, 0, 0, 0.4);
+
+  /* Install banner */
+  --color-install-banner-bg: #0f172a;
+  --color-install-banner-text: #ffffff;
+  --color-install-banner-sub: rgba(255, 255, 255, 0.65);
+}
+
+/* ─── Dark Mode ──────────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Surfaces */
+    --color-surface-0: #1e293b;
+    --color-surface-1: #0f172a;
+    --color-surface-2: #334155;
+
+    /* Borders */
+    --color-border: #334155;
+
+    /* Text */
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #94a3b8;
+    --color-text-muted: #64748b;
+
+    /* Semantic */
+    --color-accent: #60a5fa;
+    --color-accent-hover: #93c5fd;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-danger: #f87171;
+
+    /* Focus ring */
+    --color-focus-ring: rgba(96, 165, 250, 0.25);
+
+    /* Nav active item */
+    --color-nav-active-bg: #1e3a5f;
+    --color-nav-active-text: #93c5fd;
+
+    /* Badges */
+    --badge-blue-bg: #1e3a5f;   --badge-blue-text: #93c5fd;
+    --badge-green-bg: #14532d;  --badge-green-text: #86efac;
+    --badge-amber-bg: #451a03;  --badge-amber-text: #fcd34d;
+    --badge-red-bg: #450a0a;    --badge-red-text: #fca5a5;
+    --badge-slate-bg: #334155;  --badge-slate-text: #94a3b8;
+    --badge-purple-bg: #2e1065; --badge-purple-text: #d8b4fe;
+    --badge-default-bg: #334155; --badge-default-text: #94a3b8;
+
+    /* Danger banner */
+    --color-danger-bg: #450a0a;
+    --color-danger-border: #7f1d1d;
+    --color-danger-text: #fca5a5;
+
+    /* Backdrop */
+    --color-backdrop: rgba(0, 0, 0, 0.65);
+
+    /* Install banner */
+    --color-install-banner-bg: #f8fafc;
+    --color-install-banner-text: #0f172a;
+    --color-install-banner-sub: rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ─── Base Styles ─────────────────────────────────────────────────────────── */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  color-scheme: light dark;
+}
+
+body {
+  background-color: var(--color-surface-1);
+  color: var(--color-text-primary);
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+}
+
+/* ─── Scrollbars ──────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+/* ─── Focus Styles ────────────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Animations ──────────────────────────────────────────────────────────── */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-spin { animation: spin 1s linear infinite; }
+.animate-pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
+.animate-slide-up { animation: slide-up 0.25s ease-out; }
+.animate-fade-in { animation: fade-in 0.15s ease-out; }
+
+/* ─── Bottom Sheet ────────────────────────────────────────────────────────── */
+
+.bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--color-backdrop);
+  z-index: 40;
+  animation: fade-in 0.2s ease-out;
+}
+
+.bottom-sheet-content {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-surface-0);
+  border-radius: 1rem 1rem 0 0;
+  max-height: 92dvh;
+  overflow-y: auto;
+  z-index: 50;
+  animation: slide-up 0.25s ease-out;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* ─── Card ────────────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+/* ─── Search input (scoped styles in component don't apply to page-level, so define here) ── */
+
+.search-input {
+  display: block;
+  width: 100%;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface-0);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+/* ─── Input ───────────────────────────────────────────────────────────────── */
+
+.input {
+  display: block;
+  width: 100%;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface-0);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* ─── Button ──────────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  border: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.btn-secondary {
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-border);
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-surface-2);
+}

@@ -4,6 +4,7 @@ import { useSync } from '~/composables/useSync'
 import { useDatabase } from '~/composables/useDatabase'
 import { containerConfig } from '~/utils/containerUtils'
 import type { Container } from '~/types/inventory'
+import type { UUID } from '~/utils/uuid'
 import type { PrintSize } from '~/components/PrintSizeSelector.vue'
 
 const db = useDatabase()
@@ -12,10 +13,10 @@ const NuxtLink = resolveComponent('NuxtLink')
 
 // ─── Multi-select ─────────────────────────────────────────────────────────────
 const isSelecting = ref(false)
-const selectedIds = ref<number[]>([])
+const selectedIds = ref<UUID[]>([])
 const showPrintSize = ref(false)
 
-function toggleSelect(id: number) {
+function toggleSelect(id: UUID) {
   const idx = selectedIds.value.indexOf(id)
   if (idx === -1) {
     selectedIds.value = [...selectedIds.value, id]

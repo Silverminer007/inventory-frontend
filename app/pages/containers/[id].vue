@@ -17,7 +17,7 @@ const imgLoader = useImages()
 
 const NuxtLink = resolveComponent('NuxtLink')
 
-const id = computed(() => Number(route.params.id))
+const id = computed(() => route.params.id as string)
 const container = ref<Container | null>(null)
 const allContainers = ref<Container[]>([])
 const children = ref<Container[]>([])
