@@ -43,6 +43,12 @@
     () => selectedContainerIds.value.length + selectedItemIds.value.length,
   )
 
+  function cancelSelection() {
+    isSelecting.value = false
+    selectedContainerIds.value = []
+    selectedItemIds.value = []
+  }
+
   function toggleContainer(cId: UUID) {
     const idx = selectedContainerIds.value.indexOf(cId)
     if (idx === -1) {
@@ -144,6 +150,17 @@
   const showGallery = ref(false)
   const showQr = ref(false)
   const viewerIndex = ref<number | null>(null)
+
+  function openAddContainerSheet(type: ContainerType) {
+    addingContainerType.value = type
+    showActionSheet.value = false
+    showAddContainerSheet.value = true
+  }
+
+  function openAddItemSheet() {
+    showActionSheet.value = false
+    showAddItemSheet.value = true
+  }
 
   const addableChildTypes = computed<ContainerType[]>(() =>
     container.value ? getAddableChildTypes(container.value.containerType as ContainerType) : [],
@@ -560,11 +577,7 @@
             :key="type"
             class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors"
             style="background: var(--color-surface-2)"
-            @click="
-              addingContainerType = type
-              showActionSheet = false
-              showAddContainerSheet = true
-            "
+            @click="openAddContainerSheet(type)"
           >
             <div
               class="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -587,10 +600,7 @@
           <button
             class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors"
             style="background: var(--color-surface-2)"
-            @click="
-              showActionSheet = false
-              showAddItemSheet = true
-            "
+            @click="openAddItemSheet"
           >
             <div
               class="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -684,11 +694,7 @@
           <button
             class="btn btn-ghost text-sm px-3 py-1.5"
             style="color: var(--color-text-muted)"
-            @click="
-              isSelecting = false
-              selectedContainerIds = []
-              selectedItemIds = []
-            "
+            @click="cancelSelection"
           >
             Abbrechen
           </button>
