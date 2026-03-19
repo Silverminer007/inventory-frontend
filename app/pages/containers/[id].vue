@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, resolveComponent } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDatabase } from '~/composables/useDatabase'
 import { useSync } from '~/composables/useSync'
@@ -15,8 +15,6 @@ const router = useRouter()
 const db = useDatabase()
 const sync = useSync()
 const imgLoader = useImages()
-
-const NuxtLink = resolveComponent('NuxtLink')
 
 const id = computed(() => route.params.id as string)
 const container = ref<Container | null>(null)
@@ -52,6 +50,58 @@ function toggleItem(iId: UUID) {
     selectedItemIds.value = [...selectedItemIds.value, iId]
   } else {
     selectedItemIds.value = selectedItemIds.value.filter(x => x !== iId)
+  }
+}
+
+// ─── Long-press selection ──────────────────────────────────────────────────────
+let lpTimer: ReturnType<typeof setTimeout> | null = null
+let lpConsumed = false
+let lpStartX = 0
+let lpStartY = 0
+
+function lpDown(e: PointerEvent, onActivate: () => void) {
+  lpConsumed = false
+  lpStartX = e.clientX
+  lpStartY = e.clientY
+  if (lpTimer) clearTimeout(lpTimer)
+  lpTimer = setTimeout(() => {
+    lpTimer = null
+    lpConsumed = true
+    isSelecting.value = true
+    if ('vibrate' in navigator) navigator.vibrate(50)
+    onActivate()
+  }, 500)
+}
+
+function lpUp() {
+  if (lpTimer !== null) {
+    clearTimeout(lpTimer)
+    lpTimer = null
+  }
+}
+
+function lpMove(e: PointerEvent) {
+  if (lpTimer === null) return
+  const dx = e.clientX - lpStartX
+  const dy = e.clientY - lpStartY
+  if (dx * dx + dy * dy > 100) lpUp()
+}
+
+function onContainerCardClick(child: Container) {
+  if (lpConsumed) { lpConsumed = false; return }
+  if (isSelecting.value) {
+    toggleContainer(child.id)
+  } else {
+    router.push(`/containers/${child.id}`)
+  }
+}
+
+function onItemCardClick(itm: LocalItem) {
+  if (lpConsumed) { lpConsumed = false; return }
+  if (isSelecting.value) {
+    toggleItem(itm.id)
+  } else {
+    router.push(`/items/${itm.id}`)
   }
 }
 
@@ -265,7 +315,7 @@ watch(id, loadData)
             <Icon icon="mdi:pencil-outline" class="w-5 h-5" />
           </button>
           <button
-            class="btn btn-ghost text-sm px-2 py-1"
+            class="not-sm:hidden! btn btn-ghost text-sm px-2 py-1"
             style="color: var(--color-accent)"
             @click="isSelecting ? (isSelecting = false, selectedContainerIds = [], selectedItemIds = []) : (isSelecting = true)"
           >
@@ -316,15 +366,17 @@ watch(id, loadData)
           <span style="color: var(--color-text-muted)">{{ children.length }}</span>
         </h2>
         <div class="space-y-2">
-          <component
-            :is="isSelecting ? 'div' : NuxtLink"
+          <a
             v-for="child in children"
             :key="child.id"
-            :to="isSelecting ? undefined : `/containers/${child.id}`"
-            class="card flex items-center gap-4 relative"
-            :class="[isSelecting ? 'cursor-pointer' : 'active:opacity-70 transition-opacity']"
+            :href="`/containers/${child.id}`"
+            class="card flex items-center gap-4 relative select-none touch-manipulation active:opacity-70 transition-opacity"
             :style="isSelecting && selectedContainerIds.includes(child.id) ? 'outline: 2px solid var(--color-accent); outline-offset: 2px' : ''"
-            @click="isSelecting ? toggleContainer(child.id) : undefined"
+            @pointerdown="lpDown($event, () => toggleContainer(child.id))"
+            @pointerup="lpUp()"
+            @pointermove="lpMove($event)"
+            @contextmenu.prevent
+            @click.prevent="onContainerCardClick(child)"
           >
             <!-- Checkbox overlay -->
             <div
@@ -356,7 +408,7 @@ watch(id, loadData)
               </p>
             </div>
             <Icon icon="mdi:chevron-right" class="w-5 h-5 shrink-0" style="color: var(--color-text-muted)" />
-          </component>
+          </a>
         </div>
       </section>
 
@@ -367,15 +419,17 @@ watch(id, loadData)
         </h2>
 
         <div v-if="items.length > 0" class="space-y-2">
-          <component
-            :is="isSelecting ? 'div' : NuxtLink"
+          <a
             v-for="item in items"
             :key="item.id"
-            :to="isSelecting ? undefined : `/items/${item.id}`"
-            class="card flex items-center gap-4 relative"
-            :class="[isSelecting ? 'cursor-pointer' : 'active:opacity-70 transition-opacity']"
+            :href="`/items/${item.id}`"
+            class="card flex items-center gap-4 relative select-none touch-manipulation active:opacity-70 transition-opacity"
             :style="isSelecting && selectedItemIds.includes(item.id) ? 'outline: 2px solid var(--color-accent); outline-offset: 2px' : ''"
-            @click="isSelecting ? toggleItem(item.id) : undefined"
+            @pointerdown="lpDown($event, () => toggleItem(item.id))"
+            @pointerup="lpUp()"
+            @pointermove="lpMove($event)"
+            @contextmenu.prevent
+            @click.prevent="onItemCardClick(item)"
           >
             <!-- Checkbox overlay -->
             <div
@@ -415,7 +469,7 @@ watch(id, loadData)
               </p>
             </div>
             <Icon icon="mdi:chevron-right" class="w-5 h-5 shrink-0" style="color: var(--color-text-muted)" />
-          </component>
+          </a>
         </div>
 
         <EmptyState

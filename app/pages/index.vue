@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, resolveComponent } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSync } from '~/composables/useSync'
 import { useDatabase } from '~/composables/useDatabase'
 import { containerConfig } from '~/utils/containerUtils'
@@ -7,9 +8,9 @@ import type { Container } from '~/types/inventory'
 import type { UUID } from '~/utils/uuid'
 import type { PrintSize } from '~/components/PrintSizeSelector.vue'
 
+const router = useRouter()
 const db = useDatabase()
 const sync = useSync()
-const NuxtLink = resolveComponent('NuxtLink')
 
 // ─── Multi-select ─────────────────────────────────────────────────────────────
 const isSelecting = ref(false)
@@ -22,6 +23,49 @@ function toggleSelect(id: UUID) {
     selectedIds.value = [...selectedIds.value, id]
   } else {
     selectedIds.value = selectedIds.value.filter(x => x !== id)
+  }
+}
+
+// ─── Long-press selection ──────────────────────────────────────────────────────
+let lpTimer: ReturnType<typeof setTimeout> | null = null
+let lpConsumed = false
+let lpStartX = 0
+let lpStartY = 0
+
+function lpDown(e: PointerEvent, onActivate: () => void) {
+  lpConsumed = false
+  lpStartX = e.clientX
+  lpStartY = e.clientY
+  if (lpTimer) clearTimeout(lpTimer)
+  lpTimer = setTimeout(() => {
+    lpTimer = null
+    lpConsumed = true
+    isSelecting.value = true
+    if ('vibrate' in navigator) navigator.vibrate(50)
+    onActivate()
+  }, 500)
+}
+
+function lpUp() {
+  if (lpTimer !== null) {
+    clearTimeout(lpTimer)
+    lpTimer = null
+  }
+}
+
+function lpMove(e: PointerEvent) {
+  if (lpTimer === null) return
+  const dx = e.clientX - lpStartX
+  const dy = e.clientY - lpStartY
+  if (dx * dx + dy * dy > 100) lpUp()
+}
+
+function onContainerCardClick(container: Container) {
+  if (lpConsumed) { lpConsumed = false; return }
+  if (isSelecting.value) {
+    toggleSelect(container.id)
+  } else {
+    router.push(`/containers/${container.id}`)
   }
 }
 
@@ -153,7 +197,7 @@ onMounted(loadData)
       </div>
       <button
         v-if="roots.length > 0"
-        class="btn btn-ghost text-sm px-3 py-1.5 shrink-0"
+        class="not-sm:hidden! btn btn-ghost text-sm px-3 py-1.5 shrink-0"
         style="color: var(--color-accent)"
         @click="isSelecting ? (isSelecting = false, selectedIds = []) : (isSelecting = true)"
       >
@@ -173,17 +217,17 @@ onMounted(loadData)
 
     <!-- Container list -->
     <div v-if="roots.length > 0" class="px-4 space-y-2 pb-4">
-      <component
-        :is="isSelecting ? 'div' : NuxtLink"
+      <a
         v-for="container in roots"
         :key="container.id"
-        :to="isSelecting ? undefined : `/containers/${container.id}`"
-        class="card flex items-center gap-4 relative"
-        :class="[
-          isSelecting ? 'cursor-pointer' : 'active:opacity-70 transition-opacity',
-        ]"
+        :href="`/containers/${container.id}`"
+        class="card flex items-center gap-4 relative select-none touch-manipulation active:opacity-70 transition-opacity"
         :style="isSelecting && selectedIds.includes(container.id) ? 'outline: 2px solid var(--color-accent); outline-offset: 2px' : ''"
-        @click="isSelecting ? toggleSelect(container.id) : undefined"
+        @pointerdown="lpDown($event, () => toggleSelect(container.id))"
+        @pointerup="lpUp()"
+        @pointermove="lpMove($event)"
+        @contextmenu.prevent
+        @click.prevent="onContainerCardClick(container)"
       >
         <!-- Checkbox overlay when selecting -->
         <div
@@ -220,7 +264,7 @@ onMounted(loadData)
 
         <!-- Chevron -->
         <Icon icon="mdi:chevron-right" class="w-5 h-5 shrink-0" style="color: var(--color-text-muted)" />
-      </component>
+      </a>
     </div>
 
     <!-- Empty state -->

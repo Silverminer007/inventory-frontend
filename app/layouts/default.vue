@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useSync } from '~/composables/useSync'
-import { useSearch } from '~/composables/useSearch'
+import {ref, onMounted} from 'vue'
+import {useRoute} from 'vue-router'
+import {useSync} from '~/composables/useSync'
+import {useSearch} from '~/composables/useSearch'
+
+type NavItem = {
+  to: string;
+  icon: string;
+  iconActive: string;
+  label: string;
+}
 
 const route = useRoute()
 const sync = useSync()
@@ -14,18 +21,34 @@ onMounted(async () => {
   if (localStorage.getItem('db-version') !== '3') {
     showMigrationNotice.value = true
     localStorage.setItem('db-version', '3')
-    setTimeout(() => { showMigrationNotice.value = false }, 6000)
+    setTimeout(() => {
+      showMigrationNotice.value = false
+    }, 6000)
   }
   await sync.bootstrap().catch(console.error)
   await search.refreshIndex().catch(console.error)
 })
 
-const navItems = [
-  { to: '/', icon: 'mdi:home-outline', iconActive: 'mdi:home', label: 'Übersicht' },
-  { to: '/search', icon: 'mdi:magnify', iconActive: 'mdi:magnify', label: 'Suche' },
-  { to: '/scan', icon: 'mdi:qrcode-scan', iconActive: 'mdi:qrcode-scan', label: 'Scannen' },
-  { to: '/settings', icon: 'mdi:cog-outline', iconActive: 'mdi:cog', label: 'Einstellungen' }
-]
+const scannerAvailable = computed(() => {
+  console.log('BarcodeDetector' in window)
+  return 'BarcodeDetector' in window
+})
+
+const navItems: NavItem[] = []
+navItems.push(
+  {to: '/', icon: 'mdi:home-outline', iconActive: 'mdi:home', label: 'Übersicht'}
+);
+navItems.push(
+  {to: '/search', icon: 'mdi:magnify', iconActive: 'mdi:magnify', label: 'Suche'}
+);
+if (scannerAvailable.value) {
+  navItems.push(
+    {to: '/scan', icon: 'mdi:qrcode-scan', iconActive: 'mdi:qrcode-scan', label: 'Scannen'}
+  )
+}
+navItems.push(
+  {to: '/settings', icon: 'mdi:cog-outline', iconActive: 'mdi:cog', label: 'Einstellungen'}
+)
 
 function isActive(path: string): boolean {
   if (path === '/') return route.path === '/'
@@ -61,7 +84,7 @@ function isActive(path: string): boolean {
         class="flex items-center gap-2 font-bold text-base mr-auto"
         style="color: var(--color-text-primary)"
       >
-        <Icon icon="mdi:package-variant-closed" class="w-6 h-6" style="color: var(--color-accent)" />
+        <Icon icon="mdi:package-variant-closed" class="w-6 h-6" style="color: var(--color-accent)"/>
         <span class="hidden sm:inline">Lager</span>
       </NuxtLink>
 
@@ -73,12 +96,12 @@ function isActive(path: string): boolean {
         style="background: var(--color-surface-2); color: var(--color-text-muted)"
         aria-label="Suche"
       >
-        <Icon icon="mdi:magnify" class="w-4 h-4" />
+        <Icon icon="mdi:magnify" class="w-4 h-4"/>
         <span class="hidden sm:inline">Suchen…</span>
       </NuxtLink>
 
       <!-- Sync Status Indicator -->
-      <SyncStatus />
+      <SyncStatus/>
 
       <!-- Settings link -->
       <NuxtLink
@@ -87,7 +110,7 @@ function isActive(path: string): boolean {
         aria-label="Einstellungen"
         :style="isActive('/settings') ? 'color: var(--color-accent)' : ''"
       >
-        <Icon :icon="isActive('/settings') ? 'mdi:cog' : 'mdi:cog-outline'" class="w-5 h-5" />
+        <Icon :icon="isActive('/settings') ? 'mdi:cog' : 'mdi:cog-outline'" class="w-5 h-5"/>
       </NuxtLink>
     </header>
 
@@ -122,7 +145,7 @@ function isActive(path: string): boolean {
 
       <!-- Page Slot -->
       <main class="flex-1 overflow-y-auto" style="padding-bottom: 5rem">
-        <slot />
+        <slot/>
       </main>
     </div>
 
@@ -136,52 +159,23 @@ function isActive(path: string): boolean {
       "
       aria-label="Navigation"
     >
-      <!-- Home -->
       <NuxtLink
-        to="/"
+        v-for="item in navItems"
+        :key="item.to"
+        :to="item.to"
         class="flex-1 flex flex-col items-center justify-center gap-0.5 py-2"
-        :style="isActive('/') ? 'color: var(--color-accent)' : 'color: var(--color-text-muted)'"
-        :aria-current="isActive('/') ? 'page' : undefined"
+        :style="isActive(item.to) ? 'color: var(--color-accent)' : 'color: var(--color-text-muted)'"
+        :aria-current="isActive(item.to) ? 'page' : undefined"
       >
-        <Icon :icon="isActive('/') ? 'mdi:home' : 'mdi:home-outline'" class="w-6 h-6" />
-        <span class="text-[10px] font-medium">Übersicht</span>
-      </NuxtLink>
-
-      <!-- Search -->
-      <NuxtLink
-        to="/search"
-        class="flex-1 flex flex-col items-center justify-center gap-0.5 py-2"
-        :style="isActive('/search') ? 'color: var(--color-accent)' : 'color: var(--color-text-muted)'"
-        :aria-current="isActive('/search') ? 'page' : undefined"
-      >
-        <Icon icon="mdi:magnify" class="w-6 h-6" />
-        <span class="text-[10px] font-medium">Suche</span>
-      </NuxtLink>
-
-      <!-- Scan -->
-      <NuxtLink
-        to="/scan"
-        class="flex-1 flex flex-col items-center justify-center gap-0.5 py-2"
-        :style="isActive('/scan') ? 'color: var(--color-accent)' : 'color: var(--color-text-muted)'"
-        :aria-current="isActive('/scan') ? 'page' : undefined"
-      >
-        <Icon icon="mdi:qrcode-scan" class="w-6 h-6" />
-        <span class="text-[10px] font-medium">Scannen</span>
-      </NuxtLink>
-
-      <!-- Settings -->
-      <NuxtLink
-        to="/settings"
-        class="flex-1 flex flex-col items-center justify-center gap-0.5 py-2"
-        :style="isActive('/settings') ? 'color: var(--color-accent)' : 'color: var(--color-text-muted)'"
-        :aria-current="isActive('/settings') ? 'page' : undefined"
-      >
-        <Icon :icon="isActive('/settings') ? 'mdi:cog' : 'mdi:cog-outline'" class="w-6 h-6" />
-        <span class="text-[10px] font-medium">Einstellungen</span>
+        <Icon
+          :icon="isActive(item.to) ? item.iconActive : item.icon"
+          class="w-6 h-6"
+        />
+        <span class="text-[10px] font-medium">{{ item.label }}</span>
       </NuxtLink>
     </nav>
 
     <!-- PWA Install Banner -->
-    <PwaInstallBanner />
+    <PwaInstallBanner/>
   </div>
 </template>
