@@ -1,13 +1,6 @@
-import { ref, computed } from 'vue'
-import type { Ref } from 'vue'
+import { ref, computed, type Ref } from 'vue'
 import type { UUID } from '~/utils/uuid'
-import type {
-  Container,
-  Item,
-  Image,
-  AppliedCommandDTO,
-  CommandResultDTO
-} from '~/types/inventory'
+import type { Container, Item, Image, AppliedCommandDTO, CommandResultDTO } from '~/types/inventory'
 import { useDatabase } from '~/composables/useDatabase'
 
 // ─── Module-level reactive state (shared across all composable instances) ──────
@@ -95,7 +88,10 @@ export function useSync() {
     }
   }
 
-  async function uploadPendingImages(entityType: 'item' | 'container', entityId: UUID): Promise<void> {
+  async function uploadPendingImages(
+    entityType: 'item' | 'container',
+    entityId: UUID,
+  ): Promise<void> {
     const pending = await db.getPendingImagesForEntity(entityType, entityId)
     if (pending.length === 0) return
 
@@ -106,12 +102,14 @@ export function useSync() {
         form.append('isPrimary', String(img.isPrimary))
         const res = await fetch(`${apiBase}/api/v1/${entityType}s/${entityId}/images`, {
           method: 'POST',
-          body: form
+          body: form,
         })
         if (res.ok && img.id !== undefined) {
           await db.deletePendingImage(img.id)
         }
-      } catch { /* will retry on next gallery open */ }
+      } catch {
+        /* will retry on next gallery open */
+      }
     }
   }
 
@@ -142,7 +140,7 @@ export function useSync() {
     try {
       const [containersRes, itemsRes] = await Promise.all([
         fetch(`${apiBase}/api/v1/containers`),
-        fetch(`${apiBase}/api/v1/items`)
+        fetch(`${apiBase}/api/v1/items`),
       ])
 
       if (!containersRes.ok || !itemsRes.ok) {
@@ -165,7 +163,7 @@ export function useSync() {
       // Determine highest server sequence
       const allCommands = await fetchCommandsSince('2000-01-01T00:00:00Z')
       if (allCommands.length > 0) {
-        const maxSeq = Math.max(...allCommands.map(c => c.serverSequence))
+        const maxSeq = Math.max(...allCommands.map((c) => c.serverSequence))
         await db.setSyncMeta('lastServerSequence', String(maxSeq))
       }
     } finally {
@@ -207,7 +205,7 @@ export function useSync() {
       lastSyncAt.value = now
 
       if (commands.length > 0) {
-        const maxSeq = Math.max(...commands.map(c => c.serverSequence ?? 0))
+        const maxSeq = Math.max(...commands.map((c) => c.serverSequence ?? 0))
         await db.setSyncMeta('lastServerSequence', String(maxSeq))
       }
     } finally {
@@ -236,13 +234,13 @@ export function useSync() {
       // Process in batches
       for (let i = 0; i < pending.length; i += BATCH_SIZE) {
         const batch = pending.slice(i, i + BATCH_SIZE)
-        const payload = batch.map(entry => ({
+        const payload = batch.map((entry) => ({
           commandId: entry.commandId,
           commandType: entry.commandType,
           payloadVersion: 1 as const,
           payload: entry.payload,
           entityId: entry.entityId ?? undefined,
-          issuedAt: entry.createdAt
+          issuedAt: entry.createdAt,
         }))
 
         let results: CommandResultDTO[]
@@ -251,13 +249,13 @@ export function useSync() {
           const res = await fetch(`${apiBase}/commands`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
           })
 
           if (!res.ok) {
             for (const cmd of batch) {
               await db.updateCommandStatus(cmd.commandId, 'FAILED', {
-                error: `HTTP ${res.status}`
+                error: `HTTP ${res.status}`,
               })
             }
             continue
@@ -273,7 +271,7 @@ export function useSync() {
         }
 
         // Map results back by commandId
-        const resultMap = new Map(results.map(r => [r.commandId, r]))
+        const resultMap = new Map(results.map((r) => [r.commandId, r]))
 
         for (const cmd of batch) {
           const result = resultMap.get(cmd.commandId)
@@ -282,7 +280,7 @@ export function useSync() {
           if (result.status === 'APPLIED') {
             const serverId = result.entityId ?? cmd.entityId
             await db.updateCommandStatus(cmd.commandId, 'APPLIED', {
-              entityId: serverId
+              entityId: serverId,
             })
             // Sync the server snapshot; if server assigned a different ID than the
             // client-generated one, remove the stale optimistic entity to prevent duplicates
@@ -297,11 +295,11 @@ export function useSync() {
           } else if (result.status === 'CONFLICT') {
             await db.updateCommandStatus(cmd.commandId, 'CONFLICT', {
               conflictInfo: result.conflictInfo ?? undefined,
-              error: result.error ?? undefined
+              error: result.error ?? undefined,
             })
           } else {
             await db.updateCommandStatus(cmd.commandId, 'FAILED', {
-              error: result.error ?? undefined
+              error: result.error ?? undefined,
             })
             // Roll back failed CREATE — server rejected our UUID
             if (cmd.commandType === 'ITEM_CREATE' && cmd.entityId) {
@@ -347,6 +345,6 @@ export function useSync() {
     deltaSync,
     flushQueue,
     bootstrap,
-    refreshPendingCount
+    refreshPendingCount,
   }
 }

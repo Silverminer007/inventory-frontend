@@ -18,7 +18,9 @@ export function useImages() {
           for (const img of images) await db.upsertImage(img)
           return images
         }
-      } catch { /* offline */ }
+      } catch {
+        /* offline */
+      }
     }
     return []
   }
@@ -35,7 +37,9 @@ export function useImages() {
           for (const img of images) await db.upsertImage(img)
           return images
         }
-      } catch { /* offline */ }
+      } catch {
+        /* offline */
+      }
     }
     return []
   }
@@ -52,5 +56,10 @@ export function useImages() {
     return loadImagesForContainer(containerId)
   }
 
-  return { loadImagesForItem, loadImagesForContainer, refreshImagesForItem, refreshImagesForContainer }
+  return {
+    loadImagesForItem,
+    loadImagesForContainer,
+    refreshImagesForItem,
+    refreshImagesForContainer,
+  }
 }

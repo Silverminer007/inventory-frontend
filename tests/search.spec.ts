@@ -10,7 +10,9 @@ test.describe('Fuzzy-Suche', () => {
     await page.reload()
   })
 
-  test.afterEach(async ({ page }) => { await clearDatabase(page) })
+  test.afterEach(async ({ page }) => {
+    await clearDatabase(page)
+  })
 
   test('findet Item bei exaktem Match', async ({ page }) => {
     await page.getByTestId('search-input').fill('Hammer')
@@ -46,7 +48,9 @@ test.describe('Tag-Filter', () => {
     await page.reload()
   })
 
-  test.afterEach(async ({ page }) => { await clearDatabase(page) })
+  test.afterEach(async ({ page }) => {
+    await clearDatabase(page)
+  })
 
   test('zeigt Tag-Filter-Button', async ({ page }) => {
     await expect(page.getByTestId('filter-button')).toBeVisible()
@@ -73,10 +77,15 @@ test.describe('Tag-Filter', () => {
     // Add a tag filter first
     await page.getByTestId('filter-button').click()
     await page.getByTestId('tag-search-input').fill('Werkzeug')
-    await page.getByRole('button', { name: /Werkzeug/ }).first().click()
+    await page
+      .getByRole('button', { name: /Werkzeug/ })
+      .first()
+      .click()
     await page.getByRole('button', { name: 'Filter anwenden' }).click()
     // Now remove it via chip
-    const chip = page.locator('[data-testid="filter-button"] ~ * button', { hasText: 'Werkzeug' }).first()
+    const chip = page
+      .locator('[data-testid="filter-button"] ~ * button', { hasText: 'Werkzeug' })
+      .first()
     await chip.click()
     await expect(page.getByTestId('filter-button')).not.toContainText('1')
   })

@@ -10,7 +10,9 @@ test.describe('Cache-Management', () => {
     await page.reload()
   })
 
-  test.afterEach(async ({ page }) => { await clearDatabase(page) })
+  test.afterEach(async ({ page }) => {
+    await clearDatabase(page)
+  })
 
   test('zeigt korrekte Cache-Statistiken', async ({ page }) => {
     await expect(page.getByTestId('container-count')).toHaveText('3', { timeout: 5000 })
@@ -38,7 +40,7 @@ test.describe('Cache-Management', () => {
         payload: {},
         status: 'PENDING',
         createdAt: new Date().toISOString(),
-        entityId: null
+        entityId: null,
       })
     })
     await page.reload()

@@ -1,6 +1,12 @@
-import type { UUID } from '~/utils/uuid'
-import { generateId } from '~/utils/uuid'
-import type { CommandType, CommandQueueEntry, Container, Item, Image, LocalItem } from '~/types/inventory'
+import { generateId, type UUID } from '~/utils/uuid'
+import type {
+  CommandType,
+  CommandQueueEntry,
+  Container,
+  Item,
+  Image,
+  LocalItem,
+} from '~/types/inventory'
 import { useDatabase } from '~/composables/useDatabase'
 import { useSync } from '~/composables/useSync'
 
@@ -18,7 +24,7 @@ export function useCommands() {
   async function executeCommand<T extends Container | Item | Image | null>(
     type: CommandType,
     payload: Record<string, unknown>,
-    entityId?: UUID
+    entityId?: UUID,
   ): Promise<T | null> {
     const commandId = generateId()
     const issuedAt = new Date().toISOString()
@@ -29,7 +35,7 @@ export function useCommands() {
       payload,
       status: 'PENDING',
       createdAt: issuedAt,
-      entityId: entityId ?? null
+      entityId: entityId ?? null,
     }
 
     // ─── Optimistic local update ─────────────────────────────────────────────
@@ -48,7 +54,7 @@ export function useCommands() {
           parentContainerId: payload.parentContainerId as UUID | undefined,
           version: 0,
           itemCount: 0,
-          totalItemCount: 0
+          totalItemCount: 0,
         }
         await db.upsertContainer(container)
         entry.entityId = id
@@ -79,7 +85,7 @@ export function useCommands() {
           if (existing) {
             const moved: Container = {
               ...existing,
-              parentContainerId: payload.parentContainerId as UUID | null
+              parentContainerId: payload.parentContainerId as UUID | null,
             }
             await db.upsertContainer(moved)
             result = moved as unknown as T
@@ -99,7 +105,7 @@ export function useCommands() {
           quantity: (payload.quantity as number) ?? 1,
           barcode: payload.barcode as string | undefined,
           tags: payload.tags as string[] | undefined,
-          version: 0
+          version: 0,
         }
         await db.upsertItem(item)
         entry.entityId = id
@@ -130,7 +136,7 @@ export function useCommands() {
           if (existing) {
             const moved: LocalItem = {
               ...existing,
-              containerId: payload.containerId as UUID | null
+              containerId: payload.containerId as UUID | null,
             }
             await db.upsertItem(moved)
             result = moved as unknown as T

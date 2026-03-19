@@ -6,7 +6,7 @@ import type {
   Image,
   CommandQueueEntry,
   SyncMeta,
-  PendingImage
+  PendingImage,
 } from '~/types/inventory'
 
 class InventoryDatabase extends Dexie {
@@ -25,30 +25,32 @@ class InventoryDatabase extends Dexie {
       items: 'id, containerId, name, *tags',
       images: 'id, itemId, containerId',
       commandQueue: '++localId, commandId, status, createdAt',
-      syncMeta: 'key'
+      syncMeta: 'key',
     })
 
     this.version(2).stores({
-      pendingImages: '++id, entityId'
+      pendingImages: '++id, entityId',
     })
 
     // UUID migration: PK types change from number → string; clear all data
-    this.version(3).stores({
-      containers: 'id, containerType, parentContainerId, name',
-      items: 'id, containerId, name, *tags',
-      images: 'id, itemId, containerId',
-      commandQueue: 'commandId, status, createdAt',
-      pendingImages: '++id, entityId',
-      syncMeta: 'key'
-    }).upgrade(tx => {
-      return Promise.all([
-        tx.table('containers').clear(),
-        tx.table('items').clear(),
-        tx.table('images').clear(),
-        tx.table('commandQueue').clear(),
-        tx.table('syncMeta').clear()
-      ])
-    })
+    this.version(3)
+      .stores({
+        containers: 'id, containerType, parentContainerId, name',
+        items: 'id, containerId, name, *tags',
+        images: 'id, itemId, containerId',
+        commandQueue: 'commandId, status, createdAt',
+        pendingImages: '++id, entityId',
+        syncMeta: 'key',
+      })
+      .upgrade((tx) => {
+        return Promise.all([
+          tx.table('containers').clear(),
+          tx.table('items').clear(),
+          tx.table('images').clear(),
+          tx.table('commandQueue').clear(),
+          tx.table('syncMeta').clear(),
+        ])
+      })
   }
 }
 
@@ -69,7 +71,7 @@ export function useDatabase() {
 
   async function getRootContainers(): Promise<Container[]> {
     return db.containers
-      .filter(c => c.parentContainerId === null || c.parentContainerId === undefined)
+      .filter((c) => c.parentContainerId === null || c.parentContainerId === undefined)
       .toArray()
   }
 
@@ -126,10 +128,10 @@ export function useDatabase() {
   async function searchItems(query: string): Promise<LocalItem[]> {
     const q = query.toLowerCase()
     return db.items
-      .filter(item => {
+      .filter((item) => {
         if (item.name.toLowerCase().includes(q)) return true
         if (item.description?.toLowerCase().includes(q) === true) return true
-        if (item.tags?.some(t => t.toLowerCase().includes(q)) === true) return true
+        if (item.tags?.some((t) => t.toLowerCase().includes(q)) === true) return true
         return false
       })
       .toArray()
@@ -159,10 +161,14 @@ export function useDatabase() {
     return db.pendingImages.add(img as PendingImage)
   }
 
-  async function getPendingImagesForEntity(entityType: 'item' | 'container', entityId: UUID): Promise<PendingImage[]> {
+  async function getPendingImagesForEntity(
+    entityType: 'item' | 'container',
+    entityId: UUID,
+  ): Promise<PendingImage[]> {
     return db.pendingImages
-      .where('entityId').equals(entityId)
-      .filter(i => i.entityType === entityType)
+      .where('entityId')
+      .equals(entityId)
+      .filter((i) => i.entityType === entityType)
       .toArray()
   }
 
@@ -170,7 +176,11 @@ export function useDatabase() {
     await db.pendingImages.delete(id)
   }
 
-  async function remapPendingImages(entityType: 'item' | 'container', oldEntityId: UUID, newEntityId: UUID): Promise<void> {
+  async function remapPendingImages(
+    entityType: 'item' | 'container',
+    oldEntityId: UUID,
+    newEntityId: UUID,
+  ): Promise<void> {
     const imgs = await getPendingImagesForEntity(entityType, oldEntityId)
     for (const img of imgs) {
       if (img.id !== undefined) await db.pendingImages.update(img.id, { entityId: newEntityId })
@@ -191,7 +201,7 @@ export function useDatabase() {
   async function updateCommandStatus(
     commandId: UUID,
     status: CommandQueueEntry['status'],
-    extras?: Partial<CommandQueueEntry>
+    extras?: Partial<CommandQueueEntry>,
   ): Promise<void> {
     await db.commandQueue.update(commandId, { status, ...extras })
   }
@@ -272,6 +282,6 @@ export function useDatabase() {
     // sync meta
     getSyncMeta,
     setSyncMeta,
-    isDbEmpty
+    isDbEmpty,
   }
 }

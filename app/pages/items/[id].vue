@@ -1,105 +1,106 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useDatabase } from '~/composables/useDatabase'
-import { useImages } from '~/composables/useImages'
-import { useCommands } from '~/composables/useCommands'
-import { useSync } from '~/composables/useSync'
-import { getBreadcrumb } from '~/utils/containerUtils'
-import type { LocalItem, Image } from '~/types/inventory'
+  import { ref, computed, onMounted } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useDatabase } from '~/composables/useDatabase'
+  import { useImages } from '~/composables/useImages'
+  import { useCommands } from '~/composables/useCommands'
+  import { useSync } from '~/composables/useSync'
+  import { getBreadcrumb } from '~/utils/containerUtils'
+  import type { LocalItem, Image } from '~/types/inventory'
 
-const route = useRoute()
-const router = useRouter()
-const db = useDatabase()
-const imgLoader = useImages()
-const commands = useCommands()
-const sync = useSync()
+  const route = useRoute()
+  const router = useRouter()
+  const db = useDatabase()
+  const imgLoader = useImages()
+  const commands = useCommands()
+  const sync = useSync()
 
-const id = computed(() => route.params.id as string)
-const item = ref<LocalItem | null>(null)
-const allContainers = ref<Awaited<ReturnType<typeof db.getAllContainers>>>([])
+  const id = computed(() => route.params.id as string)
+  const item = ref<LocalItem | null>(null)
+  const allContainers = ref<Awaited<ReturnType<typeof db.getAllContainers>>>([])
 
-const images = ref<Image[]>([])
-const error = ref<string | null>(null)
-const isLoading = ref(true)
+  const images = ref<Image[]>([])
+  const error = ref<string | null>(null)
+  const isLoading = ref(true)
 
-const showEditSheet = ref(false)
-const showGallery = ref(false)
-const showDeleteConfirm = ref(false)
-const showQr = ref(false)
-const viewerIndex = ref<number | null>(null)
-const isDeleting = ref(false)
+  const showEditSheet = ref(false)
+  const showGallery = ref(false)
+  const showDeleteConfirm = ref(false)
+  const showQr = ref(false)
+  const viewerIndex = ref<number | null>(null)
+  const isDeleting = ref(false)
 
-// ─── Breadcrumb ───────────────────────────────────────────────────────────────
-const breadcrumb = computed(() => {
-  if (!item.value?.containerId) return []
-  return getBreadcrumb(item.value.containerId, allContainers.value)
-})
+  // ─── Breadcrumb ───────────────────────────────────────────────────────────────
+  const breadcrumb = computed(() => {
+    if (!item.value?.containerId) return []
+    return getBreadcrumb(item.value.containerId, allContainers.value)
+  })
 
-// ─── Tag display config ───────────────────────────────────────────────────────
-const tagIcons: Record<string, string> = {
-  LLM: 'mdi:creation-outline',
-  RULE: 'mdi:cog-outline',
-  MANUAL: 'mdi:pencil-outline'
-}
-const tagVariants: Record<string, 'purple' | 'slate' | 'blue'> = {
-  LLM: 'purple',
-  RULE: 'slate',
-  MANUAL: 'blue'
-}
-
-// ─── Primary image ────────────────────────────────────────────────────────────
-const primaryImage = computed(() => images.value.find(i => i.isPrimary) ?? images.value[0] ?? null)
-const otherImages = computed(() => images.value.filter(i => i !== primaryImage.value))
-
-// ─── Load data ────────────────────────────────────────────────────────────────
-async function loadData() {
-  isLoading.value = true
-  error.value = null
-  try {
-    item.value = await db.getItem(id.value) ?? null
-
-    if (!item.value) {
-      await sync.deltaSync()
-      item.value = await db.getItem(id.value) ?? null
-    }
-
-    if (item.value) {
-      allContainers.value = await db.getAllContainers()
-      images.value = await imgLoader.loadImagesForItem(id.value)
-    }
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Unbekannter Fehler'
-  } finally {
-    isLoading.value = false
+  // ─── Tag display config ───────────────────────────────────────────────────────
+  const tagIcons: Record<string, string> = {
+    LLM: 'mdi:creation-outline',
+    RULE: 'mdi:cog-outline',
+    MANUAL: 'mdi:pencil-outline',
   }
-}
-
-// ─── After edit ───────────────────────────────────────────────────────────────
-async function onItemUpdated(updated: LocalItem) {
-  showEditSheet.value = false
-  item.value = updated
-}
-
-async function onGalleryUpdated() {
-  images.value = await imgLoader.refreshImagesForItem(id.value)
-}
-
-// ─── Delete ───────────────────────────────────────────────────────────────────
-async function confirmDelete() {
-  if (!item.value) return
-  isDeleting.value = true
-  try {
-    await commands.executeCommand('ITEM_DELETE', {}, item.value.id)
-    router.back()
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Löschen fehlgeschlagen'
-    isDeleting.value = false
-    showDeleteConfirm.value = false
+  const tagVariants: Record<string, 'purple' | 'slate' | 'blue'> = {
+    LLM: 'purple',
+    RULE: 'slate',
+    MANUAL: 'blue',
   }
-}
 
-onMounted(loadData)
+  // ─── Primary image ────────────────────────────────────────────────────────────
+  const primaryImage = computed(
+    () => images.value.find((i) => i.isPrimary) ?? images.value[0] ?? null,
+  )
+
+  // ─── Load data ────────────────────────────────────────────────────────────────
+  async function loadData() {
+    isLoading.value = true
+    error.value = null
+    try {
+      item.value = (await db.getItem(id.value)) ?? null
+
+      if (!item.value) {
+        await sync.deltaSync()
+        item.value = (await db.getItem(id.value)) ?? null
+      }
+
+      if (item.value) {
+        allContainers.value = await db.getAllContainers()
+        images.value = await imgLoader.loadImagesForItem(id.value)
+      }
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Unbekannter Fehler'
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // ─── After edit ───────────────────────────────────────────────────────────────
+  async function onItemUpdated(updated: LocalItem) {
+    showEditSheet.value = false
+    item.value = updated
+  }
+
+  async function onGalleryUpdated() {
+    images.value = await imgLoader.refreshImagesForItem(id.value)
+  }
+
+  // ─── Delete ───────────────────────────────────────────────────────────────────
+  async function confirmDelete() {
+    if (!item.value) return
+    isDeleting.value = true
+    try {
+      await commands.executeCommand('ITEM_DELETE', {}, item.value.id)
+      router.back()
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Löschen fehlgeschlagen'
+      isDeleting.value = false
+      showDeleteConfirm.value = false
+    }
+  }
+
+  onMounted(loadData)
 </script>
 
 <template>
@@ -126,7 +127,11 @@ onMounted(loadData)
           Übersicht
         </NuxtLink>
         <template v-for="crumb in breadcrumb" :key="crumb.id">
-          <Icon icon="mdi:chevron-right" class="w-4 h-4 shrink-0" style="color: var(--color-text-muted)" />
+          <Icon
+            icon="mdi:chevron-right"
+            class="w-4 h-4 shrink-0"
+            style="color: var(--color-text-muted)"
+          />
           <NuxtLink
             :to="`/containers/${crumb.id}`"
             class="text-sm truncate max-w-[100px] shrink-0"
@@ -135,8 +140,15 @@ onMounted(loadData)
             {{ crumb.name }}
           </NuxtLink>
         </template>
-        <Icon icon="mdi:chevron-right" class="w-4 h-4 shrink-0" style="color: var(--color-text-muted)" />
-        <span class="text-sm font-semibold shrink-0 truncate max-w-[150px]" style="color: var(--color-text-primary)">
+        <Icon
+          icon="mdi:chevron-right"
+          class="w-4 h-4 shrink-0"
+          style="color: var(--color-text-muted)"
+        />
+        <span
+          class="text-sm font-semibold shrink-0 truncate max-w-[150px]"
+          style="color: var(--color-text-primary)"
+        >
           {{ item.name }}
         </span>
       </nav>
@@ -152,18 +164,10 @@ onMounted(loadData)
           {{ item.name }}
         </h1>
         <div class="flex items-center gap-1 shrink-0 mt-0.5">
-          <button
-            class="btn btn-ghost p-2"
-            aria-label="QR-Code"
-            @click="showQr = true"
-          >
+          <button class="btn btn-ghost p-2" aria-label="QR-Code" @click="showQr = true">
             <Icon icon="mdi:qrcode" class="w-5 h-5" />
           </button>
-          <button
-            class="btn btn-ghost p-2"
-            aria-label="Bearbeiten"
-            @click="showEditSheet = true"
-          >
+          <button class="btn btn-ghost p-2" aria-label="Bearbeiten" @click="showEditSheet = true">
             <Icon icon="mdi:pencil-outline" class="w-5 h-5" />
           </button>
         </div>
@@ -183,7 +187,11 @@ onMounted(loadData)
       <!-- ─── Info ─────────────────────────────────────────────────────────── -->
       <div class="px-4 space-y-4 mb-4">
         <!-- Description -->
-        <p v-if="item.description" class="text-base leading-relaxed" style="color: var(--color-text-secondary)">
+        <p
+          v-if="item.description"
+          class="text-base leading-relaxed"
+          style="color: var(--color-text-secondary)"
+        >
           {{ item.description }}
         </p>
 
@@ -205,14 +213,14 @@ onMounted(loadData)
 
         <!-- Tags -->
         <div v-if="item.tags && item.tags.length > 0">
-          <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted)">Tags</p>
+          <p
+            class="text-xs font-semibold uppercase tracking-wide mb-2"
+            style="color: var(--color-text-muted)"
+          >
+            Tags
+          </p>
           <div class="flex flex-wrap gap-2">
-            <Badge
-              v-for="tag in item.tags"
-              :key="tag"
-              variant="default"
-              size="md"
-            >
+            <Badge v-for="tag in item.tags" :key="tag" variant="default" size="md">
               {{ tag }}
             </Badge>
           </div>
@@ -220,7 +228,12 @@ onMounted(loadData)
 
         <!-- Enriched tags (if local tagType info exists) -->
         <div v-if="item.enrichedTags && item.enrichedTags.length > 0">
-          <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted)">Tags</p>
+          <p
+            class="text-xs font-semibold uppercase tracking-wide mb-2"
+            style="color: var(--color-text-muted)"
+          >
+            Tags
+          </p>
           <div class="flex flex-wrap gap-2">
             <Badge
               v-for="t in item.enrichedTags"
@@ -238,7 +251,10 @@ onMounted(loadData)
       <!-- ─── Image Gallery (thumbnails) ───────────────────────────────────── -->
       <div v-if="images.length > 0" class="mb-4">
         <div class="px-4 mb-2 flex items-center justify-between">
-          <p class="text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">
+          <p
+            class="text-xs font-semibold uppercase tracking-wide"
+            style="color: var(--color-text-muted)"
+          >
             Bilder ({{ images.length }})
           </p>
         </div>
@@ -247,14 +263,12 @@ onMounted(loadData)
             v-for="(img, i) in images"
             :key="img.id"
             class="relative shrink-0 w-24 h-24 rounded-xl overflow-hidden cursor-pointer"
-            :style="img.isPrimary ? 'outline: 2px solid var(--color-accent); outline-offset: 2px' : ''"
+            :style="
+              img.isPrimary ? 'outline: 2px solid var(--color-accent); outline-offset: 2px' : ''
+            "
             @click="viewerIndex = i"
           >
-            <img
-              :src="img.url"
-              :alt="img.filename"
-              class="w-full h-full object-cover"
-            />
+            <img :src="img.url" :alt="img.filename" class="w-full h-full object-cover" />
             <div
               v-if="img.isPrimary"
               class="absolute bottom-1 left-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
@@ -266,7 +280,11 @@ onMounted(loadData)
           <!-- Add image button -->
           <button
             class="shrink-0 w-24 h-24 rounded-xl flex flex-col items-center justify-center gap-1"
-            style="background: var(--color-surface-2); color: var(--color-text-muted); border: 2px dashed var(--color-border)"
+            style="
+              background: var(--color-surface-2);
+              color: var(--color-text-muted);
+              border: 2px dashed var(--color-border);
+            "
             aria-label="Bild hinzufügen"
             @click="showGallery = true"
           >
@@ -280,7 +298,11 @@ onMounted(loadData)
       <div v-else class="px-4 mb-4">
         <button
           class="w-full h-24 rounded-xl flex flex-col items-center justify-center gap-2"
-          style="background: var(--color-surface-2); color: var(--color-text-muted); border: 2px dashed var(--color-border)"
+          style="
+            background: var(--color-surface-2);
+            color: var(--color-text-muted);
+            border: 2px dashed var(--color-border);
+          "
           @click="showGallery = true"
         >
           <Icon icon="mdi:camera-plus-outline" class="w-6 h-6" />
@@ -300,17 +322,11 @@ onMounted(loadData)
           padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
         "
       >
-        <button
-          class="btn btn-secondary flex-1"
-          @click="showEditSheet = true"
-        >
+        <button class="btn btn-secondary flex-1" @click="showEditSheet = true">
           <Icon icon="mdi:pencil-outline" class="w-4 h-4" />
           Bearbeiten
         </button>
-        <button
-          class="btn btn-danger flex-1"
-          @click="showDeleteConfirm = true"
-        >
+        <button class="btn btn-danger flex-1" @click="showDeleteConfirm = true">
           <Icon icon="mdi:trash-can-outline" class="w-4 h-4" />
           Löschen
         </button>

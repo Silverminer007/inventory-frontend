@@ -10,7 +10,9 @@ test.describe('Container erstellen', () => {
     await page.reload()
   })
 
-  test.afterEach(async ({ page }) => { await clearDatabase(page) })
+  test.afterEach(async ({ page }) => {
+    await clearDatabase(page)
+  })
 
   test('erstellt neuen Raum über FAB', async ({ page }) => {
     await page.getByTestId('fab').click()
@@ -21,7 +23,7 @@ test.describe('Container erstellen', () => {
 
   test('optimistisches Update erscheint sofort', async ({ page }) => {
     // Block the flush so we can observe optimistic state
-    await page.route('**/commands', route => new Promise(() => {})) // never resolves
+    await page.route('**/commands', (_route) => new Promise(() => {})) // never resolves
     await page.getByTestId('fab').click()
     await page.getByLabel('Name *').fill('Sofort-Raum')
     await page.getByRole('button', { name: /anlegen/i }).click()
@@ -38,7 +40,9 @@ test.describe('Container erstellen', () => {
     await expect(page.getByText('Neues Regal')).toBeVisible()
   })
 
-  test('generierte ID ist gültige UUID und bleibt nach Server-Response stabil', async ({ page }) => {
+  test('generierte ID ist gültige UUID und bleibt nach Server-Response stabil', async ({
+    page,
+  }) => {
     await mockBackend(page)
     await seedDatabase(page)
     await page.goto('/')
@@ -53,9 +57,7 @@ test.describe('Container erstellen', () => {
     const id = href?.split('/').pop()
 
     // ID ist valide UUID
-    expect(id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-    )
+    expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
 
     // Nach Server-Response: gleiche ID, kein Redirect, kein Flicker
     await page.waitForTimeout(500)
@@ -72,7 +74,9 @@ test.describe('Item erstellen', () => {
     await page.reload()
   })
 
-  test.afterEach(async ({ page }) => { await clearDatabase(page) })
+  test.afterEach(async ({ page }) => {
+    await clearDatabase(page)
+  })
 
   test('zeigt Tag-Vorschläge nach Name-Eingabe', async ({ page }) => {
     await page.getByTestId('fab').click()
@@ -101,25 +105,33 @@ test.describe('Item löschen', () => {
     await page.reload()
   })
 
-  test.afterEach(async ({ page }) => { await clearDatabase(page) })
+  test.afterEach(async ({ page }) => {
+    await clearDatabase(page)
+  })
 
   test('zeigt Bestätigungs-Dialog vor dem Löschen', async ({ page }) => {
-    await page.getByRole('button', { name: /löschen/i }).first().click()
+    await page
+      .getByRole('button', { name: /löschen/i })
+      .first()
+      .click()
     await expect(page.getByText('Item löschen?')).toBeVisible()
   })
 
   test('sendet ITEM_DELETE Command nach Bestätigung', async ({ page }) => {
     let deleteCommandSent = false
-    await page.route('**/commands', async route => {
+    await page.route('**/commands', async (route) => {
       if (route.request().method() === 'POST') {
-        const body = await route.request().postDataJSON() as any[]
+        const body = (await route.request().postDataJSON()) as any[]
         if (body.some((c: any) => c.commandType === 'ITEM_DELETE')) {
           deleteCommandSent = true
         }
       }
       route.fulfill({ json: [] })
     })
-    await page.getByRole('button', { name: /löschen/i }).first().click()
+    await page
+      .getByRole('button', { name: /löschen/i })
+      .first()
+      .click()
     await page.getByRole('button', { name: 'Löschen' }).last().click()
     const pending = await getPendingCommandCount(page)
     expect(pending + (deleteCommandSent ? 0 : 1)).toBeGreaterThanOrEqual(0)

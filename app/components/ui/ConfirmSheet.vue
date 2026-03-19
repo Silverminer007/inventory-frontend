@@ -1,20 +1,23 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
-  title: string
-  description?: string
-  confirmLabel?: string
-  cancelLabel?: string
-  danger?: boolean
-}>(), {
-  confirmLabel: 'Bestätigen',
-  cancelLabel: 'Abbrechen',
-  danger: false
-})
+  withDefaults(
+    defineProps<{
+      title: string
+      description?: string
+      confirmLabel?: string
+      cancelLabel?: string
+      danger?: boolean
+    }>(),
+    {
+      confirmLabel: 'Bestätigen',
+      cancelLabel: 'Abbrechen',
+      danger: false,
+    },
+  )
 
-const emit = defineEmits<{
-  confirm: []
-  cancel: []
-}>()
+  const emit = defineEmits<{
+    confirm: []
+    cancel: []
+  }>()
 </script>
 
 <template>
@@ -35,10 +38,7 @@ const emit = defineEmits<{
         >
           {{ confirmLabel }}
         </button>
-        <button
-          class="btn btn-secondary w-full"
-          @click="emit('cancel')"
-        >
+        <button class="btn btn-secondary w-full" @click="emit('cancel')">
           {{ cancelLabel }}
         </button>
       </div>

@@ -1,904 +1,947 @@
 {
-  "openapi" : "3.1.0",
-  "tags" : [ {
-    "name" : "Containers",
-    "description" : "Container management endpoints"
-  }, {
-    "name" : "Images",
-    "description" : "Image upload and management endpoints"
-  }, {
-    "name" : "Items",
-    "description" : "Item management endpoints"
-  }, {
-    "name" : "Synonyms",
-    "description" : "Synonym management endpoints"
-  } ],
-  "components" : {
-    "schemas" : {
-      "ContainerDTO" : {
-        "type" : "object",
-        "required" : [ "name", "containerType" ],
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
+  "openapi": "3.1.0",
+  "tags": [
+    {
+      "name": "Containers",
+      "description": "Container management endpoints"
+    },
+    {
+      "name": "Images",
+      "description": "Image upload and management endpoints"
+    },
+    {
+      "name": "Items",
+      "description": "Item management endpoints"
+    },
+    {
+      "name": "Synonyms",
+      "description": "Synonym management endpoints"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "ContainerDTO": {
+        "type": "object",
+        "required": ["name", "containerType"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
           },
-          "name" : {
-            "type" : "string",
-            "pattern" : "\\S"
+          "name": {
+            "type": "string",
+            "pattern": "\\S"
           },
-          "description" : {
-            "type" : "string"
+          "description": {
+            "type": "string"
           },
-          "containerType" : {
-            "type" : "string"
+          "containerType": {
+            "type": "string"
           },
-          "locationType" : {
-            "type" : "string"
+          "locationType": {
+            "type": "string"
           },
-          "location" : {
-            "type" : "string"
+          "location": {
+            "type": "string"
           },
-          "position" : {
-            "type" : "string"
+          "position": {
+            "type": "string"
           },
-          "qrCode" : {
-            "type" : "string"
+          "qrCode": {
+            "type": "string"
           },
-          "parentContainerId" : {
-            "type" : "integer",
-            "format" : "int64"
+          "parentContainerId": {
+            "type": "integer",
+            "format": "int64"
           },
-          "lastModified" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
+          "lastModified": {
+            "$ref": "#/components/schemas/LocalDateTime"
           },
-          "version" : {
-            "type" : "integer",
-            "format" : "int64"
+          "version": {
+            "type": "integer",
+            "format": "int64"
           },
-          "createdAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
+          "createdAt": {
+            "$ref": "#/components/schemas/LocalDateTime"
           },
-          "locationPath" : {
-            "type" : "string"
+          "locationPath": {
+            "type": "string"
           },
-          "itemCount" : {
-            "type" : "integer",
-            "format" : "int32"
+          "itemCount": {
+            "type": "integer",
+            "format": "int32"
           },
-          "totalItemCount" : {
-            "type" : "integer",
-            "format" : "int32"
+          "totalItemCount": {
+            "type": "integer",
+            "format": "int32"
           },
-          "children" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ContainerDTO"
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContainerDTO"
             }
           },
-          "parent" : {
-            "$ref" : "#/components/schemas/ParentInfo"
+          "parent": {
+            "$ref": "#/components/schemas/ParentInfo"
           }
         }
       },
-      "ContainerInfo" : {
-        "type" : "object",
-        "properties" : {
-          "type" : {
-            "type" : "string"
+      "ContainerInfo": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
           },
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
+          "id": {
+            "type": "integer",
+            "format": "int64"
           },
-          "name" : {
-            "type" : "string"
+          "name": {
+            "type": "string"
           },
-          "path" : {
-            "type" : "string"
+          "path": {
+            "type": "string"
           }
         }
       },
-      "ItemDTO" : {
-        "type" : "object",
-        "required" : [ "name", "quantity" ],
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
+      "ItemDTO": {
+        "type": "object",
+        "required": ["name", "quantity"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
           },
-          "name" : {
-            "type" : "string",
-            "pattern" : "\\S"
+          "name": {
+            "type": "string",
+            "pattern": "\\S"
           },
-          "description" : {
-            "type" : "string"
+          "description": {
+            "type": "string"
           },
-          "containerId" : {
-            "type" : "integer",
-            "format" : "int64"
+          "containerId": {
+            "type": "integer",
+            "format": "int64"
           },
-          "position" : {
-            "type" : "string"
+          "position": {
+            "type": "string"
           },
-          "quantity" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
           },
-          "barcode" : {
-            "type" : "string"
+          "barcode": {
+            "type": "string"
           },
-          "qrCode" : {
-            "type" : "string"
+          "qrCode": {
+            "type": "string"
           },
-          "tags" : {
-            "type" : "array",
-            "uniqueItems" : true,
-            "items" : {
-              "type" : "string"
+          "tags": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
             }
           },
-          "lastModified" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
+          "lastModified": {
+            "$ref": "#/components/schemas/LocalDateTime"
           },
-          "version" : {
-            "type" : "integer",
-            "format" : "int64"
+          "version": {
+            "type": "integer",
+            "format": "int64"
           },
-          "createdAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
+          "createdAt": {
+            "$ref": "#/components/schemas/LocalDateTime"
           },
-          "locationPath" : {
-            "type" : "string"
+          "locationPath": {
+            "type": "string"
           },
-          "containerType" : {
-            "type" : "string"
+          "containerType": {
+            "type": "string"
           },
-          "container" : {
-            "$ref" : "#/components/schemas/ContainerInfo"
+          "container": {
+            "$ref": "#/components/schemas/ContainerInfo"
           }
         }
       },
-      "LocalDateTime" : {
-        "type" : "string",
-        "format" : "date-time",
-        "examples" : [ "2022-03-10T12:15:50" ]
+      "LocalDateTime": {
+        "type": "string",
+        "format": "date-time",
+        "examples": ["2022-03-10T12:15:50"]
       },
-      "MoveRequest" : {
-        "type" : "object",
-        "properties" : {
-          "parentContainerId" : {
-            "type" : "integer",
-            "format" : "int64"
+      "MoveRequest": {
+        "type": "object",
+        "properties": {
+          "parentContainerId": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
-      "MoveRequest1" : {
-        "type" : "object",
-        "properties" : {
-          "containerId" : {
-            "type" : "integer",
-            "format" : "int64"
+      "MoveRequest1": {
+        "type": "object",
+        "properties": {
+          "containerId": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
-      "ParentInfo" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
+      "ParentInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
           },
-          "name" : {
-            "type" : "string"
+          "name": {
+            "type": "string"
           },
-          "containerType" : {
-            "type" : "string"
+          "containerType": {
+            "type": "string"
           }
         }
       },
-      "SynonymDTO" : {
-        "type" : "object",
-        "required" : [ "canonicalTerm", "synonym" ],
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
+      "SynonymDTO": {
+        "type": "object",
+        "required": ["canonicalTerm", "synonym"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
           },
-          "canonicalTerm" : {
-            "type" : "string",
-            "pattern" : "\\S"
+          "canonicalTerm": {
+            "type": "string",
+            "pattern": "\\S"
           },
-          "synonym" : {
-            "type" : "string",
-            "pattern" : "\\S"
+          "synonym": {
+            "type": "string",
+            "pattern": "\\S"
           }
         }
       }
     }
   },
-  "paths" : {
-    "/api/v1/containers" : {
-      "get" : {
-        "summary" : "Get all containers",
-        "description" : "Returns all containers for the current user, optionally filtered by type",
-        "tags" : [ "Containers" ],
-        "parameters" : [ {
-          "description" : "Filter by container type (ROOM, SHELF, BOX)",
-          "name" : "type",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
+  "paths": {
+    "/api/v1/containers": {
+      "get": {
+        "summary": "Get all containers",
+        "description": "Returns all containers for the current user, optionally filtered by type",
+        "tags": ["Containers"],
+        "parameters": [
+          {
+            "description": "Filter by container type (ROOM, SHELF, BOX)",
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       },
-      "post" : {
-        "summary" : "Create new container",
-        "tags" : [ "Containers" ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ContainerDTO"
+      "post": {
+        "summary": "Create new container",
+        "tags": ["Containers"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContainerDTO"
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
-          "400" : {
-            "description" : "Bad Request"
+          "400": {
+            "description": "Bad Request"
           }
         }
       }
     },
-    "/api/v1/containers/roots" : {
-      "get" : {
-        "summary" : "Get root containers",
-        "description" : "Returns all root containers (rooms) for the current user",
-        "tags" : [ "Containers" ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+    "/api/v1/containers/roots": {
+      "get": {
+        "summary": "Get root containers",
+        "description": "Returns all root containers (rooms) for the current user",
+        "tags": ["Containers"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       }
     },
-    "/api/v1/containers/{id}" : {
-      "put" : {
-        "summary" : "Update container",
-        "tags" : [ "Containers" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+    "/api/v1/containers/{id}": {
+      "put": {
+        "summary": "Update container",
+        "tags": ["Containers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ContainerDTO"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContainerDTO"
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
-          "400" : {
-            "description" : "Bad Request"
+          "400": {
+            "description": "Bad Request"
           }
         }
       },
-      "get" : {
-        "summary" : "Get container by ID",
-        "tags" : [ "Containers" ],
-        "parameters" : [ {
-          "description" : "Container ID",
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+      "get": {
+        "summary": "Get container by ID",
+        "tags": ["Containers"],
+        "parameters": [
+          {
+            "description": "Container ID",
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       },
-      "delete" : {
-        "summary" : "Delete container",
-        "tags" : [ "Containers" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+      "delete": {
+        "summary": "Delete container",
+        "tags": ["Containers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       }
     },
-    "/api/v1/containers/{id}/children" : {
-      "get" : {
-        "summary" : "Get child containers",
-        "tags" : [ "Containers" ],
-        "parameters" : [ {
-          "description" : "Parent container ID",
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+    "/api/v1/containers/{id}/children": {
+      "get": {
+        "summary": "Get child containers",
+        "tags": ["Containers"],
+        "parameters": [
+          {
+            "description": "Parent container ID",
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       }
     },
-    "/api/v1/containers/{id}/images" : {
-      "post" : {
-        "summary" : "Upload image for container",
-        "tags" : [ "Images" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+    "/api/v1/containers/{id}/images": {
+      "post": {
+        "summary": "Upload image for container",
+        "tags": ["Images"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "multipart/form-data" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "file" : {
-                    "type" : "string",
-                    "format" : "binary"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
                   },
-                  "isPrimary" : {
-                    "type" : "boolean",
-                    "default" : false
+                  "isPrimary": {
+                    "type": "boolean",
+                    "default": false
                   }
                 }
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       },
-      "get" : {
-        "summary" : "List images for container",
-        "tags" : [ "Images" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+      "get": {
+        "summary": "List images for container",
+        "tags": ["Images"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       }
     },
-    "/api/v1/containers/{id}/move" : {
-      "post" : {
-        "summary" : "Move container to new parent",
-        "tags" : [ "Containers" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+    "/api/v1/containers/{id}/move": {
+      "post": {
+        "summary": "Move container to new parent",
+        "tags": ["Containers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/MoveRequest"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveRequest"
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
-          "400" : {
-            "description" : "Bad Request"
+          "400": {
+            "description": "Bad Request"
           }
         }
       }
     },
-    "/api/v1/images/{imageId}" : {
-      "get" : {
-        "summary" : "Get image metadata",
-        "tags" : [ "Images" ],
-        "parameters" : [ {
-          "name" : "imageId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+    "/api/v1/images/{imageId}": {
+      "get": {
+        "summary": "Get image metadata",
+        "tags": ["Images"],
+        "parameters": [
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       },
-      "delete" : {
-        "summary" : "Delete image",
-        "tags" : [ "Images" ],
-        "parameters" : [ {
-          "name" : "imageId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+      "delete": {
+        "summary": "Delete image",
+        "tags": ["Images"],
+        "parameters": [
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       }
     },
-    "/api/v1/items" : {
-      "get" : {
-        "summary" : "Get all items",
-        "description" : "Returns all items for the current user",
-        "tags" : [ "Items" ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+    "/api/v1/items": {
+      "get": {
+        "summary": "Get all items",
+        "description": "Returns all items for the current user",
+        "tags": ["Items"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       },
-      "post" : {
-        "summary" : "Create new item",
-        "tags" : [ "Items" ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ItemDTO"
+      "post": {
+        "summary": "Create new item",
+        "tags": ["Items"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemDTO"
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
-          "400" : {
-            "description" : "Bad Request"
+          "400": {
+            "description": "Bad Request"
           }
         }
       }
     },
-    "/api/v1/items/by-tag/{tag}" : {
-      "get" : {
-        "summary" : "Get items by tag",
-        "tags" : [ "Items" ],
-        "parameters" : [ {
-          "name" : "tag",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
+    "/api/v1/items/by-tag/{tag}": {
+      "get": {
+        "summary": "Get items by tag",
+        "tags": ["Items"],
+        "parameters": [
+          {
+            "name": "tag",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       }
     },
-    "/api/v1/items/search" : {
-      "get" : {
-        "summary" : "Search items by name",
-        "tags" : [ "Items" ],
-        "parameters" : [ {
-          "name" : "q",
-          "in" : "query",
-          "schema" : {
-            "type" : "string",
-            "default" : ""
+    "/api/v1/items/search": {
+      "get": {
+        "summary": "Search items by name",
+        "tags": ["Items"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       }
     },
-    "/api/v1/items/{id}" : {
-      "put" : {
-        "summary" : "Update item",
-        "tags" : [ "Items" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+    "/api/v1/items/{id}": {
+      "put": {
+        "summary": "Update item",
+        "tags": ["Items"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ItemDTO"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemDTO"
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
-          "400" : {
-            "description" : "Bad Request"
+          "400": {
+            "description": "Bad Request"
           }
         }
       },
-      "get" : {
-        "summary" : "Get item by ID",
-        "tags" : [ "Items" ],
-        "parameters" : [ {
-          "description" : "Item ID",
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+      "get": {
+        "summary": "Get item by ID",
+        "tags": ["Items"],
+        "parameters": [
+          {
+            "description": "Item ID",
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       },
-      "delete" : {
-        "summary" : "Delete item",
-        "tags" : [ "Items" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+      "delete": {
+        "summary": "Delete item",
+        "tags": ["Items"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       }
     },
-    "/api/v1/items/{id}/images" : {
-      "post" : {
-        "summary" : "Upload image for item",
-        "tags" : [ "Images" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+    "/api/v1/items/{id}/images": {
+      "post": {
+        "summary": "Upload image for item",
+        "tags": ["Images"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "multipart/form-data" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "file" : {
-                    "type" : "string",
-                    "format" : "binary"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
                   },
-                  "isPrimary" : {
-                    "type" : "boolean",
-                    "default" : false
+                  "isPrimary": {
+                    "type": "boolean",
+                    "default": false
                   }
                 }
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       },
-      "get" : {
-        "summary" : "List images for item",
-        "tags" : [ "Images" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+      "get": {
+        "summary": "List images for item",
+        "tags": ["Images"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       }
     },
-    "/api/v1/items/{id}/move" : {
-      "post" : {
-        "summary" : "Move item to different container",
-        "tags" : [ "Items" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+    "/api/v1/items/{id}/move": {
+      "post": {
+        "summary": "Move item to different container",
+        "tags": ["Items"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/MoveRequest1"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveRequest1"
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
-          "400" : {
-            "description" : "Bad Request"
+          "400": {
+            "description": "Bad Request"
           }
         }
       }
     },
-    "/api/v1/synonyms" : {
-      "get" : {
-        "summary" : "Get all synonyms",
-        "description" : "Returns all synonyms (global + user-specific)",
-        "tags" : [ "Synonyms" ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+    "/api/v1/synonyms": {
+      "get": {
+        "summary": "Get all synonyms",
+        "description": "Returns all synonyms (global + user-specific)",
+        "tags": ["Synonyms"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
         }
       },
-      "post" : {
-        "summary" : "Create synonym pair",
-        "tags" : [ "Synonyms" ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/SynonymDTO"
+      "post": {
+        "summary": "Create synonym pair",
+        "tags": ["Synonyms"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SynonymDTO"
               }
             }
           },
-          "required" : true
+          "required": true
         },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
-          "400" : {
-            "description" : "Bad Request"
+          "400": {
+            "description": "Bad Request"
           }
         }
       }
     },
-    "/api/v1/synonyms/{id}" : {
-      "delete" : {
-        "summary" : "Delete synonym pair",
-        "tags" : [ "Synonyms" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+    "/api/v1/synonyms/{id}": {
+      "delete": {
+        "summary": "Delete synonym pair",
+        "tags": ["Synonyms"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -906,8 +949,8 @@
       }
     }
   },
-  "info" : {
-    "title" : "inventory-backend API",
-    "version" : "1.0.0-SNAPSHOT"
+  "info": {
+    "title": "inventory-backend API",
+    "version": "1.0.0-SNAPSHOT"
   }
 }

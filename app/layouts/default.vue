@@ -1,59 +1,58 @@
 <script setup lang="ts">
-import {ref, onMounted} from 'vue'
-import {useRoute} from 'vue-router'
-import {useSync} from '~/composables/useSync'
-import {useSearch} from '~/composables/useSearch'
+  import { ref, onMounted } from 'vue'
+  import { useRoute } from 'vue-router'
+  import { useSync } from '~/composables/useSync'
+  import { useSearch } from '~/composables/useSearch'
 
-type NavItem = {
-  to: string;
-  icon: string;
-  iconActive: string;
-  label: string;
-}
-
-const route = useRoute()
-const sync = useSync()
-const search = useSearch()
-
-const showMigrationNotice = ref(false)
-
-onMounted(async () => {
-  if (localStorage.getItem('db-version') !== '3') {
-    showMigrationNotice.value = true
-    localStorage.setItem('db-version', '3')
-    setTimeout(() => {
-      showMigrationNotice.value = false
-    }, 6000)
+  type NavItem = {
+    to: string
+    icon: string
+    iconActive: string
+    label: string
   }
-  await sync.bootstrap().catch(console.error)
-  await search.refreshIndex().catch(console.error)
-})
 
-const scannerAvailable = computed(() => {
-  console.log('BarcodeDetector' in window)
-  return 'BarcodeDetector' in window
-})
+  const route = useRoute()
+  const sync = useSync()
+  const search = useSearch()
 
-const navItems: NavItem[] = []
-navItems.push(
-  {to: '/', icon: 'mdi:home-outline', iconActive: 'mdi:home', label: 'Übersicht'}
-);
-navItems.push(
-  {to: '/search', icon: 'mdi:magnify', iconActive: 'mdi:magnify', label: 'Suche'}
-);
-if (scannerAvailable.value) {
-  navItems.push(
-    {to: '/scan', icon: 'mdi:qrcode-scan', iconActive: 'mdi:qrcode-scan', label: 'Scannen'}
-  )
-}
-navItems.push(
-  {to: '/settings', icon: 'mdi:cog-outline', iconActive: 'mdi:cog', label: 'Einstellungen'}
-)
+  const showMigrationNotice = ref(false)
 
-function isActive(path: string): boolean {
-  if (path === '/') return route.path === '/'
-  return route.path === path || route.path.startsWith(path + '/')
-}
+  onMounted(async () => {
+    if (localStorage.getItem('db-version') !== '3') {
+      showMigrationNotice.value = true
+      localStorage.setItem('db-version', '3')
+      setTimeout(() => {
+        showMigrationNotice.value = false
+      }, 6000)
+    }
+    await sync.bootstrap().catch(console.error)
+    await search.refreshIndex().catch(console.error)
+  })
+
+  const scannerAvailable = computed(() => 'BarcodeDetector' in window)
+
+  const navItems: NavItem[] = []
+  navItems.push({ to: '/', icon: 'mdi:home-outline', iconActive: 'mdi:home', label: 'Übersicht' })
+  navItems.push({ to: '/search', icon: 'mdi:magnify', iconActive: 'mdi:magnify', label: 'Suche' })
+  if (scannerAvailable.value) {
+    navItems.push({
+      to: '/scan',
+      icon: 'mdi:qrcode-scan',
+      iconActive: 'mdi:qrcode-scan',
+      label: 'Scannen',
+    })
+  }
+  navItems.push({
+    to: '/settings',
+    icon: 'mdi:cog-outline',
+    iconActive: 'mdi:cog',
+    label: 'Einstellungen',
+  })
+
+  function isActive(path: string): boolean {
+    if (path === '/') return route.path === '/'
+    return route.path === path || route.path.startsWith(`${path}/`)
+  }
 </script>
 
 <template>
@@ -75,7 +74,7 @@ function isActive(path: string): boolean {
       style="
         background: var(--color-surface-0);
         border-bottom: 1px solid var(--color-border);
-        padding-top: env(safe-area-inset-top, 0)
+        padding-top: env(safe-area-inset-top, 0);
       "
     >
       <!-- Logo / App Name -->
@@ -84,7 +83,11 @@ function isActive(path: string): boolean {
         class="flex items-center gap-2 font-bold text-base mr-auto"
         style="color: var(--color-text-primary)"
       >
-        <Icon icon="mdi:package-variant-closed" class="w-6 h-6" style="color: var(--color-accent)"/>
+        <Icon
+          icon="mdi:package-variant-closed"
+          class="w-6 h-6"
+          style="color: var(--color-accent)"
+        />
         <span class="hidden sm:inline">Lager</span>
       </NuxtLink>
 
@@ -96,12 +99,12 @@ function isActive(path: string): boolean {
         style="background: var(--color-surface-2); color: var(--color-text-muted)"
         aria-label="Suche"
       >
-        <Icon icon="mdi:magnify" class="w-4 h-4"/>
+        <Icon icon="mdi:magnify" class="w-4 h-4" />
         <span class="hidden sm:inline">Suchen…</span>
       </NuxtLink>
 
       <!-- Sync Status Indicator -->
-      <SyncStatus/>
+      <SyncStatus />
 
       <!-- Settings link -->
       <NuxtLink
@@ -110,7 +113,7 @@ function isActive(path: string): boolean {
         aria-label="Einstellungen"
         :style="isActive('/settings') ? 'color: var(--color-accent)' : ''"
       >
-        <Icon :icon="isActive('/settings') ? 'mdi:cog' : 'mdi:cog-outline'" class="w-5 h-5"/>
+        <Icon :icon="isActive('/settings') ? 'mdi:cog' : 'mdi:cog-outline'" class="w-5 h-5" />
       </NuxtLink>
     </header>
 
@@ -119,10 +122,7 @@ function isActive(path: string): boolean {
       <!-- Side Navigation (lg+) -->
       <nav
         class="hidden lg:flex flex-col w-56 shrink-0 py-4 px-3 gap-1"
-        style="
-          background: var(--color-surface-0);
-          border-right: 1px solid var(--color-border)
-        "
+        style="background: var(--color-surface-0); border-right: 1px solid var(--color-border)"
         aria-label="Hauptnavigation"
       >
         <NuxtLink
@@ -130,22 +130,21 @@ function isActive(path: string): boolean {
           :key="item.to"
           :to="item.to"
           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
-          :style="isActive(item.to)
-            ? 'background: var(--color-nav-active-bg); color: var(--color-nav-active-text)'
-            : 'color: var(--color-text-secondary)'"
+          :style="
+            isActive(item.to)
+              ? 'background: var(--color-nav-active-bg); color: var(--color-nav-active-text)'
+              : 'color: var(--color-text-secondary)'
+          "
           :aria-current="isActive(item.to) ? 'page' : undefined"
         >
-          <Icon
-            :icon="isActive(item.to) ? item.iconActive : item.icon"
-            class="w-5 h-5"
-          />
+          <Icon :icon="isActive(item.to) ? item.iconActive : item.icon" class="w-5 h-5" />
           {{ item.label }}
         </NuxtLink>
       </nav>
 
       <!-- Page Slot -->
       <main class="flex-1 overflow-y-auto" style="padding-bottom: 5rem">
-        <slot/>
+        <slot />
       </main>
     </div>
 
@@ -155,7 +154,7 @@ function isActive(path: string): boolean {
       style="
         background: var(--color-surface-0);
         border-top: 1px solid var(--color-border);
-        padding-bottom: env(safe-area-inset-bottom, 0)
+        padding-bottom: env(safe-area-inset-bottom, 0);
       "
       aria-label="Navigation"
     >
@@ -167,15 +166,12 @@ function isActive(path: string): boolean {
         :style="isActive(item.to) ? 'color: var(--color-accent)' : 'color: var(--color-text-muted)'"
         :aria-current="isActive(item.to) ? 'page' : undefined"
       >
-        <Icon
-          :icon="isActive(item.to) ? item.iconActive : item.icon"
-          class="w-6 h-6"
-        />
+        <Icon :icon="isActive(item.to) ? item.iconActive : item.icon" class="w-6 h-6" />
         <span class="text-[10px] font-medium">{{ item.label }}</span>
       </NuxtLink>
     </nav>
 
     <!-- PWA Install Banner -->
-    <PwaInstallBanner/>
+    <PwaInstallBanner />
   </div>
 </template>

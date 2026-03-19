@@ -2,41 +2,18 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: [
-    '@nuxt/eslint'
-  ],
+  modules: ['@nuxt/eslint'],
+
+  ssr: false,
 
   components: [
     { path: '~/components/ui', prefix: '' },
     { path: '~/components/forms', prefix: '' },
-    '~/components'
+    '~/components',
   ],
 
-  ssr: false,
-
   devtools: {
-    enabled: true
-  },
-
-  css: ['~/assets/css/main.css'],
-
-  compatibilityDate: '2025-01-15',
-
-  vite: {
-    plugins: [
-      tailwindcss()
-    ],
-    server: {
-      hmr: {
-        clientPort: 3000
-      }
-    }
-  },
-
-  runtimeConfig: {
-    public: {
-      apiBase: 'http://localhost:8080'
-    }
+    enabled: true,
   },
 
   app: {
@@ -48,20 +25,42 @@ export default defineNuxtConfig({
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
-        { name: 'apple-mobile-web-app-title', content: 'Lager' }
+        { name: 'apple-mobile-web-app-title', content: 'Lager' },
       ],
-      link: [
-        { rel: 'manifest', href: '/manifest.webmanifest' }
-      ]
-    }
+      link: [{ rel: 'manifest', href: '/manifest.webmanifest' }],
+    },
+  },
+
+  css: ['~/assets/css/main.css'],
+
+  runtimeConfig: {
+    public: {
+      apiBase: 'http://localhost:8080',
+    },
+  },
+
+  compatibilityDate: '2025-01-15',
+
+  vite: {
+    plugins: [tailwindcss()],
+    server: {
+      hmr: {
+        clientPort: 3000,
+      },
+    },
+  },
+
+  typescript: {
+    strict: true,
+    typeCheck: false,
   },
 
   eslint: {
     config: {
       stylistic: {
         commaDangle: 'never',
-        braceStyle: '1tbs'
-      }
-    }
-  }
+        braceStyle: '1tbs',
+      },
+    },
+  },
 })

@@ -1,88 +1,93 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useSearch, highlight, type SearchResult } from '~/composables/useSearch'
-import { containerConfig } from '~/utils/containerUtils'
-import type { ContainerType } from '~/utils/containerUtils'
+  import { ref, computed, watch, onMounted } from 'vue'
+  import { useRoute } from 'vue-router'
+  import { useSearch, highlight, type SearchResult } from '~/composables/useSearch'
+  import { containerConfig } from '~/utils/containerUtils'
 
-const config = useRuntimeConfig()
-const apiBase = config.public.apiBase as string
-const route = useRoute()
+  const config = useRuntimeConfig()
+  const apiBase = config.public.apiBase as string
+  const route = useRoute()
 
-const search = useSearch()
+  const search = useSearch()
 
-const query = ref((route.query.q as string) ?? '')
-const activeTags = ref<string[]>([])
-const isSearching = ref(false)
-const error = ref<string | null>(null)
-const results = ref<SearchResult[]>([])
-const showTagFilter = ref(false)
+  const query = ref((route.query.q as string) ?? '')
+  const activeTags = ref<string[]>([])
+  const isSearching = ref(false)
+  const error = ref<string | null>(null)
+  const results = ref<SearchResult[]>([])
+  const showTagFilter = ref(false)
 
-// ─── Debounced search ──────────────────────────────────────────────────────────
-let debounceTimer: ReturnType<typeof setTimeout> | null = null
+  // ─── Debounced search ──────────────────────────────────────────────────────────
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
-watch([query, activeTags], () => {
-  if (debounceTimer) clearTimeout(debounceTimer)
-  const q = query.value.trim()
-  if (q.length < 2 && activeTags.value.length === 0) {
-    results.value = []
-    return
+  watch(
+    [query, activeTags],
+    () => {
+      if (debounceTimer) clearTimeout(debounceTimer)
+      const q = query.value.trim()
+      if (q.length < 2 && activeTags.value.length === 0) {
+        results.value = []
+        return
+      }
+      debounceTimer = setTimeout(() => performSearch(), 250)
+    },
+    { deep: true },
+  )
+
+  async function performSearch() {
+    isSearching.value = true
+    error.value = null
+    try {
+      results.value = await search.searchWithOnlineMerge(
+        query.value.trim(),
+        activeTags.value,
+        apiBase,
+      )
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Suchfehler'
+    } finally {
+      isSearching.value = false
+    }
   }
-  debounceTimer = setTimeout(() => performSearch(), 250)
-}, { deep: true })
 
-async function performSearch() {
-  isSearching.value = true
-  error.value = null
-  try {
-    results.value = await search.searchWithOnlineMerge(query.value.trim(), activeTags.value, apiBase)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Suchfehler'
-  } finally {
-    isSearching.value = false
-  }
-}
+  // ─── Grouped results ───────────────────────────────────────────────────────────
+  const containerResults = computed(() => results.value.filter((r) => r.type === 'container'))
+  const itemResults = computed(() => results.value.filter((r) => r.type === 'item'))
 
-// ─── Grouped results ───────────────────────────────────────────────────────────
-const containerResults = computed(() =>
-  results.value.filter(r => r.type === 'container')
-)
-const itemResults = computed(() =>
-  results.value.filter(r => r.type === 'item')
-)
+  const rooms = computed(() =>
+    containerResults.value.filter((r) => r.container?.containerType === 'ROOM'),
+  )
+  const shelves = computed(() =>
+    containerResults.value.filter((r) => r.container?.containerType === 'SHELF'),
+  )
+  const boxes = computed(() =>
+    containerResults.value.filter((r) => r.container?.containerType === 'BOX'),
+  )
 
-const rooms = computed(() =>
-  containerResults.value.filter(r => r.container?.containerType === 'ROOM')
-)
-const shelves = computed(() =>
-  containerResults.value.filter(r => r.container?.containerType === 'SHELF')
-)
-const boxes = computed(() =>
-  containerResults.value.filter(r => r.container?.containerType === 'BOX')
-)
+  const hasResults = computed(() => results.value.length > 0)
+  const showEmpty = computed(
+    () =>
+      !isSearching.value &&
+      !hasResults.value &&
+      (query.value.trim().length >= 2 || activeTags.value.length > 0),
+  )
+  const emptyTitle = computed(() =>
+    activeTags.value.length > 0 && !query.value.trim()
+      ? 'Keine Items mit diesen Tags'
+      : `Keine Treffer für '${query.value}'`,
+  )
 
-const hasResults = computed(() => results.value.length > 0)
-const showEmpty = computed(() =>
-  !isSearching.value && !hasResults.value
-  && (query.value.trim().length >= 2 || activeTags.value.length > 0)
-)
-const emptyTitle = computed(() =>
-  activeTags.value.length > 0 && !query.value.trim()
-    ? 'Keine Items mit diesen Tags'
-    : `Keine Treffer für '${query.value}'`
-)
+  // ─── Input ref ────────────────────────────────────────────────────────────────
+  const inputEl = ref<HTMLInputElement | null>(null)
 
-// ─── Input ref ────────────────────────────────────────────────────────────────
-const inputEl = ref<HTMLInputElement | null>(null)
-
-onMounted(async () => {
-  await search.ensureIndex()
-  if (query.value.trim().length >= 2) {
-    performSearch()
-  } else {
-    inputEl.value?.focus()
-  }
-})
+  onMounted(async () => {
+    await search.ensureIndex()
+    if (query.value.trim().length >= 2) {
+      performSearch()
+    } else {
+      inputEl.value?.focus()
+    }
+  })
 </script>
 
 <template>
@@ -121,9 +126,11 @@ onMounted(async () => {
         <!-- Tag filter button -->
         <button
           class="relative flex items-center gap-1.5 text-sm font-medium px-3 py-1 rounded-full shrink-0 transition-colors"
-          :style="activeTags.length > 0
-            ? 'background: var(--color-nav-active-bg); color: var(--color-nav-active-text)'
-            : 'background: var(--color-surface-2); color: var(--color-text-secondary)'"
+          :style="
+            activeTags.length > 0
+              ? 'background: var(--color-nav-active-bg); color: var(--color-nav-active-text)'
+              : 'background: var(--color-surface-2); color: var(--color-text-secondary)'
+          "
           data-testid="filter-button"
           @click="showTagFilter = true"
         >
@@ -145,7 +152,7 @@ onMounted(async () => {
             :key="tag"
             class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium shrink-0"
             style="background: var(--color-nav-active-bg); color: var(--color-nav-active-text)"
-            @click="activeTags = activeTags.filter(t => t !== tag)"
+            @click="activeTags = activeTags.filter((t) => t !== tag)"
           >
             {{ tag }}
             <Icon icon="mdi:close" class="w-2.5 h-2.5" />
@@ -153,11 +160,7 @@ onMounted(async () => {
         </div>
 
         <!-- Result count -->
-        <span
-          v-if="hasResults"
-          class="text-xs shrink-0"
-          style="color: var(--color-text-muted)"
-        >
+        <span v-if="hasResults" class="text-xs shrink-0" style="color: var(--color-text-muted)">
           {{ results.length }} Treffer
         </span>
       </div>
@@ -196,8 +199,15 @@ onMounted(async () => {
       <!-- Räume -->
       <section v-if="rooms.length > 0">
         <div class="flex items-center gap-2 mb-2">
-          <Icon :icon="containerConfig.ROOM.icon" class="w-4 h-4" style="color: var(--color-text-muted)" />
-          <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">
+          <Icon
+            :icon="containerConfig.ROOM.icon"
+            class="w-4 h-4"
+            style="color: var(--color-text-muted)"
+          />
+          <span
+            class="text-xs font-semibold uppercase tracking-wide"
+            style="color: var(--color-text-muted)"
+          >
             Räume ({{ rooms.length }})
           </span>
         </div>
@@ -208,10 +218,22 @@ onMounted(async () => {
             :to="`/containers/${r.container!.id}`"
             class="card flex items-center gap-3 active:opacity-70 transition-opacity"
           >
-            <Icon :icon="containerConfig.ROOM.icon" class="w-5 h-5 shrink-0" style="color: var(--color-accent)" />
+            <Icon
+              :icon="containerConfig.ROOM.icon"
+              class="w-5 h-5 shrink-0"
+              style="color: var(--color-accent)"
+            />
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <span class="font-medium truncate" style="color: var(--color-text-primary)" v-html="highlight(r.container!.name, r.matches, 'name')" />
-            <Icon icon="mdi:chevron-right" class="w-4 h-4 ml-auto shrink-0" style="color: var(--color-text-muted)" />
+            <span
+              class="font-medium truncate"
+              style="color: var(--color-text-primary)"
+              v-html="highlight(r.container!.name, r.matches, 'name')"
+            />
+            <Icon
+              icon="mdi:chevron-right"
+              class="w-4 h-4 ml-auto shrink-0"
+              style="color: var(--color-text-muted)"
+            />
           </NuxtLink>
         </div>
       </section>
@@ -219,8 +241,15 @@ onMounted(async () => {
       <!-- Regale -->
       <section v-if="shelves.length > 0">
         <div class="flex items-center gap-2 mb-2">
-          <Icon :icon="containerConfig.SHELF.icon" class="w-4 h-4" style="color: var(--color-text-muted)" />
-          <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">
+          <Icon
+            :icon="containerConfig.SHELF.icon"
+            class="w-4 h-4"
+            style="color: var(--color-text-muted)"
+          />
+          <span
+            class="text-xs font-semibold uppercase tracking-wide"
+            style="color: var(--color-text-muted)"
+          >
             Regale ({{ shelves.length }})
           </span>
         </div>
@@ -231,15 +260,31 @@ onMounted(async () => {
             :to="`/containers/${r.container!.id}`"
             class="card flex items-center gap-3 active:opacity-70 transition-opacity"
           >
-            <Icon :icon="containerConfig.SHELF.icon" class="w-5 h-5 shrink-0" style="color: var(--color-accent)" />
+            <Icon
+              :icon="containerConfig.SHELF.icon"
+              class="w-5 h-5 shrink-0"
+              style="color: var(--color-accent)"
+            />
             <div class="flex-1 min-w-0">
               <!-- eslint-disable-next-line vue/no-v-html -->
-              <p class="font-medium truncate" style="color: var(--color-text-primary)" v-html="highlight(r.container!.name, r.matches, 'name')" />
-              <p v-if="r.breadcrumb.length" class="text-xs truncate" style="color: var(--color-text-muted)">
-                {{ r.breadcrumb.map(c => c.name).join(' → ') }}
+              <p
+                class="font-medium truncate"
+                style="color: var(--color-text-primary)"
+                v-html="highlight(r.container!.name, r.matches, 'name')"
+              />
+              <p
+                v-if="r.breadcrumb.length"
+                class="text-xs truncate"
+                style="color: var(--color-text-muted)"
+              >
+                {{ r.breadcrumb.map((c) => c.name).join(' → ') }}
               </p>
             </div>
-            <Icon icon="mdi:chevron-right" class="w-4 h-4 shrink-0" style="color: var(--color-text-muted)" />
+            <Icon
+              icon="mdi:chevron-right"
+              class="w-4 h-4 shrink-0"
+              style="color: var(--color-text-muted)"
+            />
           </NuxtLink>
         </div>
       </section>
@@ -247,8 +292,15 @@ onMounted(async () => {
       <!-- Kisten -->
       <section v-if="boxes.length > 0">
         <div class="flex items-center gap-2 mb-2">
-          <Icon :icon="containerConfig.BOX.icon" class="w-4 h-4" style="color: var(--color-text-muted)" />
-          <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">
+          <Icon
+            :icon="containerConfig.BOX.icon"
+            class="w-4 h-4"
+            style="color: var(--color-text-muted)"
+          />
+          <span
+            class="text-xs font-semibold uppercase tracking-wide"
+            style="color: var(--color-text-muted)"
+          >
             Kisten ({{ boxes.length }})
           </span>
         </div>
@@ -259,15 +311,31 @@ onMounted(async () => {
             :to="`/containers/${r.container!.id}`"
             class="card flex items-center gap-3 active:opacity-70 transition-opacity"
           >
-            <Icon :icon="containerConfig.BOX.icon" class="w-5 h-5 shrink-0" style="color: var(--color-accent)" />
+            <Icon
+              :icon="containerConfig.BOX.icon"
+              class="w-5 h-5 shrink-0"
+              style="color: var(--color-accent)"
+            />
             <div class="flex-1 min-w-0">
               <!-- eslint-disable-next-line vue/no-v-html -->
-              <p class="font-medium truncate" style="color: var(--color-text-primary)" v-html="highlight(r.container!.name, r.matches, 'name')" />
-              <p v-if="r.breadcrumb.length" class="text-xs truncate" style="color: var(--color-text-muted)">
-                {{ r.breadcrumb.map(c => c.name).join(' → ') }}
+              <p
+                class="font-medium truncate"
+                style="color: var(--color-text-primary)"
+                v-html="highlight(r.container!.name, r.matches, 'name')"
+              />
+              <p
+                v-if="r.breadcrumb.length"
+                class="text-xs truncate"
+                style="color: var(--color-text-muted)"
+              >
+                {{ r.breadcrumb.map((c) => c.name).join(' → ') }}
               </p>
             </div>
-            <Icon icon="mdi:chevron-right" class="w-4 h-4 shrink-0" style="color: var(--color-text-muted)" />
+            <Icon
+              icon="mdi:chevron-right"
+              class="w-4 h-4 shrink-0"
+              style="color: var(--color-text-muted)"
+            />
           </NuxtLink>
         </div>
       </section>
@@ -276,7 +344,10 @@ onMounted(async () => {
       <section v-if="itemResults.length > 0">
         <div class="flex items-center gap-2 mb-2">
           <Icon icon="mdi:cube-outline" class="w-4 h-4" style="color: var(--color-text-muted)" />
-          <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">
+          <span
+            class="text-xs font-semibold uppercase tracking-wide"
+            style="color: var(--color-text-muted)"
+          >
             Items ({{ itemResults.length }})
           </span>
         </div>
@@ -291,24 +362,44 @@ onMounted(async () => {
               class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style="background: var(--color-surface-2)"
             >
-              <Icon icon="mdi:cube-outline" class="w-5 h-5" style="color: var(--color-text-muted)" />
+              <Icon
+                icon="mdi:cube-outline"
+                class="w-5 h-5"
+                style="color: var(--color-text-muted)"
+              />
             </div>
             <div class="flex-1 min-w-0">
               <!-- eslint-disable-next-line vue/no-v-html -->
-              <p class="font-medium truncate" style="color: var(--color-text-primary)" v-html="highlight(r.item!.name, r.matches, 'name')" />
-              <p v-if="r.breadcrumb.length" class="text-xs truncate" style="color: var(--color-text-muted)">
-                {{ r.breadcrumb.map(c => c.name).join(' → ') }}
+              <p
+                class="font-medium truncate"
+                style="color: var(--color-text-primary)"
+                v-html="highlight(r.item!.name, r.matches, 'name')"
+              />
+              <p
+                v-if="r.breadcrumb.length"
+                class="text-xs truncate"
+                style="color: var(--color-text-muted)"
+              >
+                {{ r.breadcrumb.map((c) => c.name).join(' → ') }}
               </p>
               <div v-if="r.item!.tags?.length" class="flex flex-wrap gap-1 mt-1">
                 <Badge v-for="tag in r.item!.tags!.slice(0, 3)" :key="tag" variant="default">
                   {{ tag }}
                 </Badge>
-                <span v-if="r.item!.tags!.length > 3" class="text-xs" style="color: var(--color-text-muted)">
+                <span
+                  v-if="r.item!.tags!.length > 3"
+                  class="text-xs"
+                  style="color: var(--color-text-muted)"
+                >
                   +{{ r.item!.tags!.length - 3 }}
                 </span>
               </div>
             </div>
-            <Icon icon="mdi:chevron-right" class="w-4 h-4 shrink-0" style="color: var(--color-text-muted)" />
+            <Icon
+              icon="mdi:chevron-right"
+              class="w-4 h-4 shrink-0"
+              style="color: var(--color-text-muted)"
+            />
           </NuxtLink>
         </div>
       </section>
@@ -327,10 +418,10 @@ onMounted(async () => {
 </template>
 
 <style>
-.search-highlight {
-  background: var(--color-nav-active-bg);
-  color: var(--color-nav-active-text);
-  border-radius: 2px;
-  padding: 0 2px;
-}
+  .search-highlight {
+    background: var(--color-nav-active-bg);
+    color: var(--color-nav-active-text);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
 </style>

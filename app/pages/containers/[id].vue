@@ -1,222 +1,232 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useDatabase } from '~/composables/useDatabase'
-import { useSync } from '~/composables/useSync'
-import { useImages } from '~/composables/useImages'
-import { containerConfig, getBreadcrumb, getAddableChildTypes } from '~/utils/containerUtils'
-import type { Container, LocalItem, Image } from '~/types/inventory'
-import type { ContainerType } from '~/utils/containerUtils'
-import type { UUID } from '~/utils/uuid'
-import type { PrintSize } from '~/components/PrintSizeSelector.vue'
+  import { ref, computed, onMounted, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useDatabase } from '~/composables/useDatabase'
+  import { useSync } from '~/composables/useSync'
+  import { useImages } from '~/composables/useImages'
+  import {
+    containerConfig,
+    getBreadcrumb,
+    getAddableChildTypes,
+    type ContainerType,
+  } from '~/utils/containerUtils'
+  import type { Container, LocalItem, Image } from '~/types/inventory'
+  import type { UUID } from '~/utils/uuid'
+  import type { PrintSize } from '~/components/PrintSizeSelector.vue'
 
-const route = useRoute()
-const router = useRouter()
-const db = useDatabase()
-const sync = useSync()
-const imgLoader = useImages()
+  const route = useRoute()
+  const router = useRouter()
+  const db = useDatabase()
+  const sync = useSync()
+  const imgLoader = useImages()
 
-const id = computed(() => route.params.id as string)
-const container = ref<Container | null>(null)
-const allContainers = ref<Container[]>([])
-const children = ref<Container[]>([])
-const items = ref<LocalItem[]>([])
-const images = ref<Image[]>([])
-const error = ref<string | null>(null)
-const isLoading = ref(true)
+  const id = computed(() => route.params.id as string)
+  const container = ref<Container | null>(null)
+  const allContainers = ref<Container[]>([])
+  const children = ref<Container[]>([])
+  const items = ref<LocalItem[]>([])
+  const images = ref<Image[]>([])
+  const error = ref<string | null>(null)
+  const isLoading = ref(true)
 
-const primaryImage = computed(() => images.value.find(i => i.isPrimary) ?? images.value[0] ?? null)
-
-// ─── Multi-select ─────────────────────────────────────────────────────────────
-const isSelecting = ref(false)
-const selectedContainerIds = ref<UUID[]>([])
-const selectedItemIds = ref<UUID[]>([])
-const showPrintSize = ref(false)
-
-const totalSelected = computed(() => selectedContainerIds.value.length + selectedItemIds.value.length)
-
-function toggleContainer(cId: UUID) {
-  const idx = selectedContainerIds.value.indexOf(cId)
-  if (idx === -1) {
-    selectedContainerIds.value = [...selectedContainerIds.value, cId]
-  } else {
-    selectedContainerIds.value = selectedContainerIds.value.filter(x => x !== cId)
-  }
-}
-
-function toggleItem(iId: UUID) {
-  const idx = selectedItemIds.value.indexOf(iId)
-  if (idx === -1) {
-    selectedItemIds.value = [...selectedItemIds.value, iId]
-  } else {
-    selectedItemIds.value = selectedItemIds.value.filter(x => x !== iId)
-  }
-}
-
-// ─── Long-press selection ──────────────────────────────────────────────────────
-let lpTimer: ReturnType<typeof setTimeout> | null = null
-let lpConsumed = false
-let lpStartX = 0
-let lpStartY = 0
-
-function lpDown(e: PointerEvent, onActivate: () => void) {
-  lpConsumed = false
-  lpStartX = e.clientX
-  lpStartY = e.clientY
-  if (lpTimer) clearTimeout(lpTimer)
-  lpTimer = setTimeout(() => {
-    lpTimer = null
-    lpConsumed = true
-    isSelecting.value = true
-    if ('vibrate' in navigator) navigator.vibrate(50)
-    onActivate()
-  }, 500)
-}
-
-function lpUp() {
-  if (lpTimer !== null) {
-    clearTimeout(lpTimer)
-    lpTimer = null
-  }
-}
-
-function lpMove(e: PointerEvent) {
-  if (lpTimer === null) return
-  const dx = e.clientX - lpStartX
-  const dy = e.clientY - lpStartY
-  if (dx * dx + dy * dy > 100) lpUp()
-}
-
-function onContainerCardClick(child: Container) {
-  if (lpConsumed) { lpConsumed = false; return }
-  if (isSelecting.value) {
-    toggleContainer(child.id)
-  } else {
-    router.push(`/containers/${child.id}`)
-  }
-}
-
-function onItemCardClick(itm: LocalItem) {
-  if (lpConsumed) { lpConsumed = false; return }
-  if (isSelecting.value) {
-    toggleItem(itm.id)
-  } else {
-    router.push(`/items/${itm.id}`)
-  }
-}
-
-function openPrint(size: PrintSize) {
-  showPrintSize.value = false
-  const params = new URLSearchParams({ size })
-  if (selectedContainerIds.value.length > 0) {
-    params.set('containers', selectedContainerIds.value.join(','))
-  }
-  if (selectedItemIds.value.length > 0) {
-    params.set('items', selectedItemIds.value.join(','))
-  }
-  window.open(
-    `/print?${params.toString()}`,
-    '_blank',
-    'width=1000,height=750,menubar=no,toolbar=no,location=no'
+  const primaryImage = computed(
+    () => images.value.find((i) => i.isPrimary) ?? images.value[0] ?? null,
   )
-}
 
-// ─── Sheets ───────────────────────────────────────────────────────────────────
-const showActionSheet = ref(false)
-const showEditSheet = ref(false)
-const showAddContainerSheet = ref(false)
-const addingContainerType = ref<ContainerType>('SHELF')
-const showAddItemSheet = ref(false)
-const showGallery = ref(false)
-const showQr = ref(false)
-const viewerIndex = ref<number | null>(null)
+  // ─── Multi-select ─────────────────────────────────────────────────────────────
+  const isSelecting = ref(false)
+  const selectedContainerIds = ref<UUID[]>([])
+  const selectedItemIds = ref<UUID[]>([])
+  const showPrintSize = ref(false)
 
-const addableChildTypes = computed<ContainerType[]>(() =>
-  container.value ? getAddableChildTypes(container.value.containerType as ContainerType) : []
-)
+  const totalSelected = computed(
+    () => selectedContainerIds.value.length + selectedItemIds.value.length,
+  )
 
-// ─── Breadcrumb ───────────────────────────────────────────────────────────────
-const breadcrumb = computed(() =>
-  container.value ? getBreadcrumb(container.value.id, allContainers.value) : []
-)
+  function toggleContainer(cId: UUID) {
+    const idx = selectedContainerIds.value.indexOf(cId)
+    if (idx === -1) {
+      selectedContainerIds.value = [...selectedContainerIds.value, cId]
+    } else {
+      selectedContainerIds.value = selectedContainerIds.value.filter((x) => x !== cId)
+    }
+  }
 
-const containerCfg = computed(() =>
-  container.value
-    ? containerConfig[container.value.containerType as ContainerType] ?? null
-    : null
-)
+  function toggleItem(iId: UUID) {
+    const idx = selectedItemIds.value.indexOf(iId)
+    if (idx === -1) {
+      selectedItemIds.value = [...selectedItemIds.value, iId]
+    } else {
+      selectedItemIds.value = selectedItemIds.value.filter((x) => x !== iId)
+    }
+  }
 
-// ─── Data Loading ─────────────────────────────────────────────────────────────
-async function loadData() {
-  isLoading.value = true
-  error.value = null
-  try {
-    allContainers.value = await db.getAllContainers()
-    container.value = allContainers.value.find(c => c.id === id.value) ?? null
+  // ─── Long-press selection ──────────────────────────────────────────────────────
+  let lpTimer: ReturnType<typeof setTimeout> | null = null
+  let lpConsumed = false
+  let lpStartX = 0
+  let lpStartY = 0
 
-    if (!container.value) {
-      // Try to sync once
-      await sync.deltaSync()
+  function lpDown(e: PointerEvent, onActivate: () => void) {
+    lpConsumed = false
+    lpStartX = e.clientX
+    lpStartY = e.clientY
+    if (lpTimer) clearTimeout(lpTimer)
+    lpTimer = setTimeout(() => {
+      lpTimer = null
+      lpConsumed = true
+      isSelecting.value = true
+      if ('vibrate' in navigator) navigator.vibrate(50)
+      onActivate()
+    }, 500)
+  }
+
+  function lpUp() {
+    if (lpTimer !== null) {
+      clearTimeout(lpTimer)
+      lpTimer = null
+    }
+  }
+
+  function lpMove(e: PointerEvent) {
+    if (lpTimer === null) return
+    const dx = e.clientX - lpStartX
+    const dy = e.clientY - lpStartY
+    if (dx * dx + dy * dy > 100) lpUp()
+  }
+
+  function onContainerCardClick(child: Container) {
+    if (lpConsumed) {
+      lpConsumed = false
+      return
+    }
+    if (isSelecting.value) {
+      toggleContainer(child.id)
+    } else {
+      router.push(`/containers/${child.id}`)
+    }
+  }
+
+  function onItemCardClick(itm: LocalItem) {
+    if (lpConsumed) {
+      lpConsumed = false
+      return
+    }
+    if (isSelecting.value) {
+      toggleItem(itm.id)
+    } else {
+      router.push(`/items/${itm.id}`)
+    }
+  }
+
+  function openPrint(size: PrintSize) {
+    showPrintSize.value = false
+    const params = new URLSearchParams({ size })
+    if (selectedContainerIds.value.length > 0) {
+      params.set('containers', selectedContainerIds.value.join(','))
+    }
+    if (selectedItemIds.value.length > 0) {
+      params.set('items', selectedItemIds.value.join(','))
+    }
+    window.open(
+      `/print?${params.toString()}`,
+      '_blank',
+      'width=1000,height=750,menubar=no,toolbar=no,location=no',
+    )
+  }
+
+  // ─── Sheets ───────────────────────────────────────────────────────────────────
+  const showActionSheet = ref(false)
+  const showEditSheet = ref(false)
+  const showAddContainerSheet = ref(false)
+  const addingContainerType = ref<ContainerType>('SHELF')
+  const showAddItemSheet = ref(false)
+  const showGallery = ref(false)
+  const showQr = ref(false)
+  const viewerIndex = ref<number | null>(null)
+
+  const addableChildTypes = computed<ContainerType[]>(() =>
+    container.value ? getAddableChildTypes(container.value.containerType as ContainerType) : [],
+  )
+
+  // ─── Breadcrumb ───────────────────────────────────────────────────────────────
+  const breadcrumb = computed(() =>
+    container.value ? getBreadcrumb(container.value.id, allContainers.value) : [],
+  )
+
+  const containerCfg = computed(() =>
+    container.value
+      ? (containerConfig[container.value.containerType as ContainerType] ?? null)
+      : null,
+  )
+
+  // ─── Data Loading ─────────────────────────────────────────────────────────────
+  async function loadData() {
+    isLoading.value = true
+    error.value = null
+    try {
       allContainers.value = await db.getAllContainers()
-      container.value = allContainers.value.find(c => c.id === id.value) ?? null
+      container.value = allContainers.value.find((c) => c.id === id.value) ?? null
+
+      if (!container.value) {
+        // Try to sync once
+        await sync.deltaSync()
+        allContainers.value = await db.getAllContainers()
+        container.value = allContainers.value.find((c) => c.id === id.value) ?? null
+      }
+
+      if (container.value) {
+        children.value = allContainers.value.filter((c) => c.parentContainerId === id.value)
+        items.value = await db.getItemsByContainer(id.value)
+        images.value = await imgLoader.loadImagesForContainer(id.value)
+      }
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Unbekannter Fehler'
+    } finally {
+      isLoading.value = false
     }
+  }
 
-    if (container.value) {
-      children.value = allContainers.value.filter(c => c.parentContainerId === id.value)
-      items.value = await db.getItemsByContainer(id.value)
-      images.value = await imgLoader.loadImagesForContainer(id.value)
+  function childLabel(c: Container): string {
+    const childCount = allContainers.value.filter((x) => x.parentContainerId === c.id).length
+    const itemCount = c.itemCount ?? 0
+    const parts: string[] = []
+    if (childCount > 0) {
+      const type = c.containerType === 'ROOM' ? 'Regal' : 'Kiste'
+      parts.push(
+        `${childCount} ${type}${childCount !== 1 ? (c.containerType === 'ROOM' ? 'e' : 'n') : ''}`,
+      )
     }
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Unbekannter Fehler'
-  } finally {
-    isLoading.value = false
+    if (itemCount > 0) parts.push(`${itemCount} Item${itemCount !== 1 ? 's' : ''}`)
+    return parts.join(' · ') || 'Leer'
   }
-}
 
-function childLabel(c: Container): string {
-  const childCount = allContainers.value.filter(x => x.parentContainerId === c.id).length
-  const itemCount = c.itemCount ?? 0
-  const parts: string[] = []
-  if (childCount > 0) {
-    const type = c.containerType === 'ROOM' ? 'Regal' : 'Kiste'
-    parts.push(`${childCount} ${type}${childCount !== 1 ? (c.containerType === 'ROOM' ? 'e' : 'n') : ''}`)
+  function onChildContainerCreated(c: Container) {
+    showAddContainerSheet.value = false
+    showActionSheet.value = false
+    children.value = [...children.value, c]
+    allContainers.value = [...allContainers.value, c]
   }
-  if (itemCount > 0) parts.push(`${itemCount} Item${itemCount !== 1 ? 's' : ''}`)
-  return parts.join(' · ') || 'Leer'
-}
 
-const tagColorMap: Record<string, string> = {
-  LLM: 'purple',
-  RULE: 'slate',
-  MANUAL: 'blue'
-}
+  function onItemCreated() {
+    showAddItemSheet.value = false
+    showActionSheet.value = false
+    loadData()
+  }
 
-function onChildContainerCreated(c: Container) {
-  showAddContainerSheet.value = false
-  showActionSheet.value = false
-  children.value = [...children.value, c]
-  allContainers.value = [...allContainers.value, c]
-}
+  async function onGalleryUpdated() {
+    images.value = await imgLoader.refreshImagesForContainer(id.value)
+  }
 
-function onItemCreated() {
-  showAddItemSheet.value = false
-  showActionSheet.value = false
-  loadData()
-}
+  function onContainerUpdated(updated: Container) {
+    showEditSheet.value = false
+    container.value = updated
+    allContainers.value = allContainers.value.map((c) => (c.id === updated.id ? updated : c))
+  }
 
-async function onGalleryUpdated() {
-  images.value = await imgLoader.refreshImagesForContainer(id.value)
-}
-
-function onContainerUpdated(updated: Container) {
-  showEditSheet.value = false
-  container.value = updated
-  allContainers.value = allContainers.value.map(c => c.id === updated.id ? updated : c)
-}
-
-onMounted(loadData)
-// Vue Router reuses this component when navigating between containers — reload on ID change
-watch(id, loadData)
+  onMounted(loadData)
+  // Vue Router reuses this component when navigating between containers — reload on ID change
+  watch(id, loadData)
 </script>
 
 <template>
@@ -238,15 +248,16 @@ watch(id, loadData)
 
     <template v-else>
       <!-- ─── Breadcrumb ───────────────────────────────────────────────────── -->
-      <nav
-        class="flex items-center gap-1 px-4 pt-3 pb-1 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
+      <nav class="flex items-center gap-1 px-4 pt-3 pb-1 overflow-x-auto" aria-label="Breadcrumb">
         <NuxtLink to="/" class="text-sm shrink-0" style="color: var(--color-text-muted)">
           Übersicht
         </NuxtLink>
         <template v-for="(crumb, i) in breadcrumb" :key="crumb.id">
-          <Icon icon="mdi:chevron-right" class="w-4 h-4 shrink-0" style="color: var(--color-text-muted)" />
+          <Icon
+            icon="mdi:chevron-right"
+            class="w-4 h-4 shrink-0"
+            style="color: var(--color-text-muted)"
+          />
           <NuxtLink
             v-if="i < breadcrumb.length - 1"
             :to="`/containers/${crumb.id}`"
@@ -287,37 +298,41 @@ watch(id, loadData)
             <h1 class="text-xl font-bold" style="color: var(--color-text-primary)">
               {{ container.name }}
             </h1>
-            <Badge :variant="containerCfg?.color as 'blue' | 'green' | 'amber' ?? 'default'">
+            <Badge :variant="(containerCfg?.color as 'blue' | 'green' | 'amber') ?? 'default'">
               {{ containerCfg?.label }}
             </Badge>
           </div>
-          <p v-if="container.description" class="text-sm mt-0.5" style="color: var(--color-text-secondary)">
+          <p
+            v-if="container.description"
+            class="text-sm mt-0.5"
+            style="color: var(--color-text-secondary)"
+          >
             {{ container.description }}
           </p>
-          <p v-if="container.position" class="text-xs mt-0.5" style="color: var(--color-text-muted)">
+          <p
+            v-if="container.position"
+            class="text-xs mt-0.5"
+            style="color: var(--color-text-muted)"
+          >
             <Icon icon="mdi:map-marker-outline" class="w-3.5 h-3.5 inline" />
             {{ container.position }}
           </p>
         </div>
         <div class="flex items-center gap-1 shrink-0">
-          <button
-            class="btn btn-ghost p-2"
-            aria-label="QR-Code"
-            @click="showQr = true"
-          >
+          <button class="btn btn-ghost p-2" aria-label="QR-Code" @click="showQr = true">
             <Icon icon="mdi:qrcode" class="w-5 h-5" />
           </button>
-          <button
-            class="btn btn-ghost p-2"
-            aria-label="Bearbeiten"
-            @click="showEditSheet = true"
-          >
+          <button class="btn btn-ghost p-2" aria-label="Bearbeiten" @click="showEditSheet = true">
             <Icon icon="mdi:pencil-outline" class="w-5 h-5" />
           </button>
           <button
             class="not-sm:hidden! btn btn-ghost text-sm px-2 py-1"
             style="color: var(--color-accent)"
-            @click="isSelecting ? (isSelecting = false, selectedContainerIds = [], selectedItemIds = []) : (isSelecting = true)"
+            @click="
+              isSelecting
+                ? ((isSelecting = false), (selectedContainerIds = []), (selectedItemIds = []))
+                : (isSelecting = true)
+            "
           >
             {{ isSelecting ? 'Fertig' : 'Auswählen' }}
           </button>
@@ -342,14 +357,20 @@ watch(id, loadData)
             v-for="(img, i) in images"
             :key="img.id"
             class="relative shrink-0 w-20 h-20 rounded-xl overflow-hidden cursor-pointer"
-            :style="img.isPrimary ? 'outline: 2px solid var(--color-accent); outline-offset: 2px' : ''"
+            :style="
+              img.isPrimary ? 'outline: 2px solid var(--color-accent); outline-offset: 2px' : ''
+            "
             @click="viewerIndex = i"
           >
             <img :src="img.url" :alt="img.filename" class="w-full h-full object-cover" />
           </div>
           <button
             class="shrink-0 w-20 h-20 rounded-xl flex flex-col items-center justify-center gap-1"
-            style="background: var(--color-surface-2); color: var(--color-text-muted); border: 2px dashed var(--color-border)"
+            style="
+              background: var(--color-surface-2);
+              color: var(--color-text-muted);
+              border: 2px dashed var(--color-border);
+            "
             aria-label="Bild hinzufügen"
             @click="showGallery = true"
           >
@@ -361,7 +382,10 @@ watch(id, loadData)
 
       <!-- ─── Unterkontainer ──────────────────────────────────────────────── -->
       <section v-if="children.length > 0" class="px-4 mb-4">
-        <h2 class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted)">
+        <h2
+          class="text-xs font-semibold uppercase tracking-wide mb-2"
+          style="color: var(--color-text-muted)"
+        >
           {{ container.containerType === 'ROOM' ? 'Regale' : 'Kisten' }}
           <span style="color: var(--color-text-muted)">{{ children.length }}</span>
         </h2>
@@ -371,7 +395,11 @@ watch(id, loadData)
             :key="child.id"
             :href="`/containers/${child.id}`"
             class="card flex items-center gap-4 relative select-none touch-manipulation active:opacity-70 transition-opacity"
-            :style="isSelecting && selectedContainerIds.includes(child.id) ? 'outline: 2px solid var(--color-accent); outline-offset: 2px' : ''"
+            :style="
+              isSelecting && selectedContainerIds.includes(child.id)
+                ? 'outline: 2px solid var(--color-accent); outline-offset: 2px'
+                : ''
+            "
             @pointerdown="lpDown($event, () => toggleContainer(child.id))"
             @pointerup="lpUp()"
             @pointermove="lpMove($event)"
@@ -382,11 +410,17 @@ watch(id, loadData)
             <div
               v-if="isSelecting"
               class="absolute top-2 left-2 z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center"
-              :style="selectedContainerIds.includes(child.id)
-                ? 'background: var(--color-accent); border-color: var(--color-accent)'
-                : 'background: var(--color-surface-0); border-color: var(--color-border)'"
+              :style="
+                selectedContainerIds.includes(child.id)
+                  ? 'background: var(--color-accent); border-color: var(--color-accent)'
+                  : 'background: var(--color-surface-0); border-color: var(--color-border)'
+              "
             >
-              <Icon v-if="selectedContainerIds.includes(child.id)" icon="mdi:check" class="w-4 h-4 text-white" />
+              <Icon
+                v-if="selectedContainerIds.includes(child.id)"
+                icon="mdi:check"
+                class="w-4 h-4 text-white"
+              />
             </div>
 
             <div
@@ -394,7 +428,9 @@ watch(id, loadData)
               style="background: var(--color-surface-2)"
             >
               <Icon
-                :icon="containerConfig[child.containerType as ContainerType]?.icon ?? 'mdi:cube-outline'"
+                :icon="
+                  containerConfig[child.containerType as ContainerType]?.icon ?? 'mdi:cube-outline'
+                "
                 class="w-5 h-5"
                 style="color: var(--color-accent)"
               />
@@ -407,14 +443,21 @@ watch(id, loadData)
                 {{ childLabel(child) }}
               </p>
             </div>
-            <Icon icon="mdi:chevron-right" class="w-5 h-5 shrink-0" style="color: var(--color-text-muted)" />
+            <Icon
+              icon="mdi:chevron-right"
+              class="w-5 h-5 shrink-0"
+              style="color: var(--color-text-muted)"
+            />
           </a>
         </div>
       </section>
 
       <!-- ─── Items ───────────────────────────────────────────────────────── -->
       <section class="px-4 mb-4">
-        <h2 class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted)">
+        <h2
+          class="text-xs font-semibold uppercase tracking-wide mb-2"
+          style="color: var(--color-text-muted)"
+        >
           Items <span>{{ items.length }}</span>
         </h2>
 
@@ -424,7 +467,11 @@ watch(id, loadData)
             :key="item.id"
             :href="`/items/${item.id}`"
             class="card flex items-center gap-4 relative select-none touch-manipulation active:opacity-70 transition-opacity"
-            :style="isSelecting && selectedItemIds.includes(item.id) ? 'outline: 2px solid var(--color-accent); outline-offset: 2px' : ''"
+            :style="
+              isSelecting && selectedItemIds.includes(item.id)
+                ? 'outline: 2px solid var(--color-accent); outline-offset: 2px'
+                : ''
+            "
             @pointerdown="lpDown($event, () => toggleItem(item.id))"
             @pointerup="lpUp()"
             @pointermove="lpMove($event)"
@@ -435,32 +482,42 @@ watch(id, loadData)
             <div
               v-if="isSelecting"
               class="absolute top-2 left-2 z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center"
-              :style="selectedItemIds.includes(item.id)
-                ? 'background: var(--color-accent); border-color: var(--color-accent)'
-                : 'background: var(--color-surface-0); border-color: var(--color-border)'"
+              :style="
+                selectedItemIds.includes(item.id)
+                  ? 'background: var(--color-accent); border-color: var(--color-accent)'
+                  : 'background: var(--color-surface-0); border-color: var(--color-border)'
+              "
             >
-              <Icon v-if="selectedItemIds.includes(item.id)" icon="mdi:check" class="w-4 h-4 text-white" />
+              <Icon
+                v-if="selectedItemIds.includes(item.id)"
+                icon="mdi:check"
+                class="w-4 h-4 text-white"
+              />
             </div>
 
             <div
               class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style="background: var(--color-surface-2)"
             >
-              <Icon icon="mdi:cube-outline" class="w-5 h-5" style="color: var(--color-text-muted)" />
+              <Icon
+                icon="mdi:cube-outline"
+                class="w-5 h-5"
+                style="color: var(--color-text-muted)"
+              />
             </div>
             <div class="flex-1 min-w-0">
               <p class="font-medium truncate" style="color: var(--color-text-primary)">
                 {{ item.name }}
               </p>
               <div v-if="item.tags && item.tags.length > 0" class="flex flex-wrap gap-1 mt-1">
-                <Badge
-                  v-for="tag in item.tags.slice(0, 3)"
-                  :key="tag"
-                  variant="default"
-                >
+                <Badge v-for="tag in item.tags.slice(0, 3)" :key="tag" variant="default">
                   {{ tag }}
                 </Badge>
-                <span v-if="item.tags.length > 3" class="text-xs" style="color: var(--color-text-muted)">
+                <span
+                  v-if="item.tags.length > 3"
+                  class="text-xs"
+                  style="color: var(--color-text-muted)"
+                >
                   +{{ item.tags.length - 3 }}
                 </span>
               </div>
@@ -468,7 +525,11 @@ watch(id, loadData)
                 Anzahl: {{ item.quantity }}
               </p>
             </div>
-            <Icon icon="mdi:chevron-right" class="w-5 h-5 shrink-0" style="color: var(--color-text-muted)" />
+            <Icon
+              icon="mdi:chevron-right"
+              class="w-5 h-5 shrink-0"
+              style="color: var(--color-text-muted)"
+            />
           </a>
         </div>
 
@@ -499,28 +560,37 @@ watch(id, loadData)
             :key="type"
             class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors"
             style="background: var(--color-surface-2)"
-            @click="addingContainerType = type; showActionSheet = false; showAddContainerSheet = true"
+            @click="
+              addingContainerType = type
+              showActionSheet = false
+              showAddContainerSheet = true
+            "
           >
             <div
               class="w-10 h-10 rounded-xl flex items-center justify-center"
               style="background: var(--color-surface-0)"
             >
-              <Icon :icon="containerConfig[type].icon" class="w-5 h-5" style="color: var(--color-accent)" />
+              <Icon
+                :icon="containerConfig[type].icon"
+                class="w-5 h-5"
+                style="color: var(--color-accent)"
+              />
             </div>
             <div>
               <p class="font-medium" style="color: var(--color-text-primary)">
                 {{ containerConfig[type].label }} hinzufügen
               </p>
-              <p class="text-xs" style="color: var(--color-text-muted)">
-                Neuen Lagerort anlegen
-              </p>
+              <p class="text-xs" style="color: var(--color-text-muted)">Neuen Lagerort anlegen</p>
             </div>
           </button>
 
           <button
             class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-colors"
             style="background: var(--color-surface-2)"
-            @click="showActionSheet = false; showAddItemSheet = true"
+            @click="
+              showActionSheet = false
+              showAddItemSheet = true
+            "
           >
             <div
               class="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -614,7 +684,11 @@ watch(id, loadData)
           <button
             class="btn btn-ghost text-sm px-3 py-1.5"
             style="color: var(--color-text-muted)"
-            @click="isSelecting = false; selectedContainerIds = []; selectedItemIds = []"
+            @click="
+              isSelecting = false
+              selectedContainerIds = []
+              selectedItemIds = []
+            "
           >
             Abbrechen
           </button>
@@ -622,11 +696,7 @@ watch(id, loadData)
       </div>
 
       <!-- ─── Print size selector ──────────────────────────────────────────── -->
-      <PrintSizeSelector
-        v-if="showPrintSize"
-        @select="openPrint"
-        @close="showPrintSize = false"
-      />
+      <PrintSizeSelector v-if="showPrintSize" @select="openPrint" @close="showPrintSize = false" />
     </template>
   </div>
 </template>

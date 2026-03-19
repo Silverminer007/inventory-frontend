@@ -23,10 +23,7 @@ export function useSearch() {
   const db = useDatabase()
 
   async function buildIndex(): Promise<void> {
-    const [items, containers] = await Promise.all([
-      db.getAllItems(),
-      db.getAllContainers()
-    ])
+    const [items, containers] = await Promise.all([db.getAllItems(), db.getAllContainers()])
 
     allItemsCache = items
     allContainersCache = containers
@@ -36,25 +33,25 @@ export function useSearch() {
         { name: 'name', weight: 0.6 },
         { name: 'description', weight: 0.2 },
         { name: 'tags', weight: 0.2 },
-        { name: 'barcode', weight: 0.1 }
+        { name: 'barcode', weight: 0.1 },
       ],
       threshold: 0.35,
       includeScore: true,
       includeMatches: true,
       minMatchCharLength: 2,
-      ignoreLocation: true
+      ignoreLocation: true,
     })
 
     containerFuse = new Fuse(containers, {
       keys: [
         { name: 'name', weight: 0.7 },
-        { name: 'description', weight: 0.3 }
+        { name: 'description', weight: 0.3 },
       ],
       threshold: 0.35,
       includeScore: true,
       includeMatches: true,
       minMatchCharLength: 2,
-      ignoreLocation: true
+      ignoreLocation: true,
     })
 
     indexBuilt = true
@@ -81,44 +78,40 @@ export function useSearch() {
       const rawItems = itemFuse.search(query)
       const rawContainers = containerFuse.search(query)
 
-      itemResults = rawItems.map(r => ({
+      itemResults = rawItems.map((r) => ({
         type: 'item' as const,
         item: r.item,
         score: r.score ?? 1,
         matches: r.matches,
-        breadcrumb: r.item.containerId
-          ? getBreadcrumb(r.item.containerId, allContainersCache)
-          : []
+        breadcrumb: r.item.containerId ? getBreadcrumb(r.item.containerId, allContainersCache) : [],
       }))
 
-      containerResults = rawContainers.map(r => ({
+      containerResults = rawContainers.map((r) => ({
         type: 'container' as const,
         container: r.item,
         score: r.score ?? 1,
         matches: r.matches,
         breadcrumb: r.item.parentContainerId
           ? getBreadcrumb(r.item.parentContainerId, allContainersCache)
-          : []
+          : [],
       }))
     } else if (activeTags.length > 0) {
       // Tag-only filter: scan the cached items array directly
       return allItemsCache
-        .filter(item => activeTags.every(tag => item.tags?.includes(tag)))
-        .map(item => ({
+        .filter((item) => activeTags.every((tag) => item.tags?.includes(tag)))
+        .map((item) => ({
           type: 'item' as const,
           item,
           score: 0,
           matches: undefined,
-          breadcrumb: item.containerId
-            ? getBreadcrumb(item.containerId, allContainersCache)
-            : []
+          breadcrumb: item.containerId ? getBreadcrumb(item.containerId, allContainersCache) : [],
         }))
     }
 
     // Apply tag filter on top of fuzzy results
     if (activeTags.length > 0) {
-      itemResults = itemResults.filter(r =>
-        activeTags.every(tag => r.item?.tags?.includes(tag))
+      itemResults = itemResults.filter((r) =>
+        activeTags.every((tag) => r.item?.tags?.includes(tag)),
       )
     }
 
@@ -129,7 +122,7 @@ export function useSearch() {
   async function searchWithOnlineMerge(
     query: string,
     activeTags: string[],
-    apiBase: string
+    apiBase: string,
   ): Promise<SearchResult[]> {
     await ensureIndex()
 
@@ -148,23 +141,21 @@ export function useSearch() {
       const res = await fetch(`${apiBase}/api/v1/items/search?${params}`)
       if (res.ok) {
         const onlineItems: LocalItem[] = await res.json()
-        const localItemIds = new Set(
-          local.filter(r => r.type === 'item').map(r => r.item!.id)
-        )
+        const localItemIds = new Set(local.filter((r) => r.type === 'item').map((r) => r.item!.id))
         const extra: SearchResult[] = onlineItems
-          .filter(i => !localItemIds.has(i.id))
-          .map(item => ({
+          .filter((i) => !localItemIds.has(i.id))
+          .map((item) => ({
             type: 'item' as const,
             item,
             score: 0.5,
             matches: undefined,
-            breadcrumb: item.containerId
-              ? getBreadcrumb(item.containerId, allContainersCache)
-              : []
+            breadcrumb: item.containerId ? getBreadcrumb(item.containerId, allContainersCache) : [],
           }))
         return [...local, ...extra]
       }
-    } catch { /* offline or error — use local only */ }
+    } catch {
+      /* offline or error — use local only */
+    }
 
     return local
   }
@@ -189,10 +180,10 @@ export function useSearch() {
 export function highlight(
   text: string,
   matches: readonly FuseResultMatch[] | undefined,
-  key: string
+  key: string,
 ): string {
   if (!matches) return escapeHtml(text)
-  const match = matches.find(m => m.key === key)
+  const match = matches.find((m) => m.key === key)
   if (!match?.indices?.length) return escapeHtml(text)
 
   let result = ''

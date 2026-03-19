@@ -1,21 +1,18 @@
 <script setup lang="ts">
-defineProps<{
-  message: string
-}>()
+  defineProps<{
+    message: string
+  }>()
 
-const emit = defineEmits<{
-  dismiss: []
-}>()
+  const emit = defineEmits<{
+    dismiss: []
+  }>()
 </script>
 
 <template>
   <div
     role="alert"
     class="flex items-start gap-3 rounded-xl p-4 animate-fade-in"
-    style="
-      background: var(--color-danger-bg);
-      border: 1px solid var(--color-danger-border);
-    "
+    style="background: var(--color-danger-bg); border: 1px solid var(--color-danger-border)"
   >
     <Icon
       icon="mdi:alert-circle-outline"

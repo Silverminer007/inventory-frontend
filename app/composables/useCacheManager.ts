@@ -19,13 +19,13 @@ export function useCacheManager() {
         db.items.clear(),
         db.images.clear(),
         db.commandQueue.clear(),
-        db.syncMeta.clear()
+        db.syncMeta.clear(),
       ])
 
       // Clear all service worker caches
       if (typeof caches !== 'undefined') {
         const keys = await caches.keys()
-        await Promise.all(keys.map(k => caches.delete(k)))
+        await Promise.all(keys.map((k) => caches.delete(k)))
       }
 
       // Full re-sync from server

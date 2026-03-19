@@ -1,37 +1,38 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+  import { computed } from 'vue'
 
-const props = defineProps<{
-  entityType: 'item' | 'container'
-  entityId: number
-  name: string
-}>()
+  const props = defineProps<{
+    entityType: 'item' | 'container'
+    entityId: string
+    name: string
+  }>()
 
-const emit = defineEmits<{ close: [] }>()
+  const emit = defineEmits<{ close: [] }>()
 
-const url = computed(() => {
-  if (typeof window === 'undefined') return ''
-  return `${window.location.origin}/${props.entityType}s/${props.entityId}`
-})
+  const url = computed(() => {
+    if (typeof window === 'undefined') return ''
+    return `${window.location.origin}/${props.entityType}s/${props.entityId}`
+  })
 
-async function copyUrl() {
-  if (!url.value) return
-  await navigator.clipboard.writeText(url.value).catch(() => {})
-}
+  async function copyUrl() {
+    if (!url.value) return
+    await navigator.clipboard.writeText(url.value).catch(() => {})
+  }
 
-function openPrint() {
-  const params = new URLSearchParams({ type: props.entityType, id: String(props.entityId) })
-  window.open(`/print?${params}`, '_blank', 'width=900,height=700,menubar=no,toolbar=no,location=no')
-}
+  function openPrint() {
+    const params = new URLSearchParams({ type: props.entityType, id: String(props.entityId) })
+    window.open(
+      `/print?${params}`,
+      '_blank',
+      'width=900,height=700,menubar=no,toolbar=no,location=no',
+    )
+  }
 </script>
 
 <template>
   <BottomSheet :title="`QR-Code: ${name}`" @close="emit('close')">
     <div class="flex flex-col items-center gap-4 py-2">
-      <div
-        class="p-3 rounded-2xl"
-        style="background: #fff"
-      >
+      <div class="p-3 rounded-2xl" style="background: #fff">
         <QrCode :value="url" :size="220" />
       </div>
 

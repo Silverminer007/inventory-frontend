@@ -4,14 +4,14 @@ import type { Container } from '~/types/inventory'
 export const containerConfig = {
   ROOM: { label: 'Raum', icon: 'mdi:home-outline', color: 'blue' },
   SHELF: { label: 'Regal', icon: 'mdi:bookshelf', color: 'green' },
-  BOX: { label: 'Kiste', icon: 'mdi:package-variant-closed', color: 'amber' }
+  BOX: { label: 'Kiste', icon: 'mdi:package-variant-closed', color: 'amber' },
 } as const
 
 export type ContainerType = keyof typeof containerConfig
 
 /** Returns the full ancestor chain from root to the given container (inclusive) */
 export function getContainerPath(containerId: UUID, allContainers: Container[]): Container[] {
-  const map = new Map(allContainers.map(c => [c.id, c]))
+  const map = new Map(allContainers.map((c) => [c.id, c]))
   const path: Container[] = []
   let current = map.get(containerId)
 
@@ -26,12 +26,12 @@ export function getContainerPath(containerId: UUID, allContainers: Container[]):
 /** Returns breadcrumb items (id, name, type) from root to container */
 export function getBreadcrumb(
   containerId: UUID,
-  allContainers: Container[]
+  allContainers: Container[],
 ): Array<{ id: UUID; name: string; type: ContainerType }> {
-  return getContainerPath(containerId, allContainers).map(c => ({
+  return getContainerPath(containerId, allContainers).map((c) => ({
     id: c.id,
     name: c.name,
-    type: c.containerType as ContainerType
+    type: c.containerType as ContainerType,
   }))
 }
 

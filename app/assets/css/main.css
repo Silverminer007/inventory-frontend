@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ─── Light Mode (default) ───────────────────────────────────────────────────── */
 
@@ -31,13 +31,20 @@
   --color-nav-active-text: #1d4ed8;
 
   /* Badges */
-  --badge-blue-bg: #dbeafe;   --badge-blue-text: #1d4ed8;
-  --badge-green-bg: #dcfce7;  --badge-green-text: #15803d;
-  --badge-amber-bg: #fef3c7;  --badge-amber-text: #b45309;
-  --badge-red-bg: #fee2e2;    --badge-red-text: #b91c1c;
-  --badge-slate-bg: #f1f5f9;  --badge-slate-text: #334155;
-  --badge-purple-bg: #f3e8ff; --badge-purple-text: #7e22ce;
-  --badge-default-bg: #f1f5f9; --badge-default-text: #475569;
+  --badge-blue-bg: #dbeafe;
+  --badge-blue-text: #1d4ed8;
+  --badge-green-bg: #dcfce7;
+  --badge-green-text: #15803d;
+  --badge-amber-bg: #fef3c7;
+  --badge-amber-text: #b45309;
+  --badge-red-bg: #fee2e2;
+  --badge-red-text: #b91c1c;
+  --badge-slate-bg: #f1f5f9;
+  --badge-slate-text: #334155;
+  --badge-purple-bg: #f3e8ff;
+  --badge-purple-text: #7e22ce;
+  --badge-default-bg: #f1f5f9;
+  --badge-default-text: #475569;
 
   /* Danger banner */
   --color-danger-bg: #fee2e2;
@@ -85,13 +92,20 @@
     --color-nav-active-text: #93c5fd;
 
     /* Badges */
-    --badge-blue-bg: #1e3a5f;   --badge-blue-text: #93c5fd;
-    --badge-green-bg: #14532d;  --badge-green-text: #86efac;
-    --badge-amber-bg: #451a03;  --badge-amber-text: #fcd34d;
-    --badge-red-bg: #450a0a;    --badge-red-text: #fca5a5;
-    --badge-slate-bg: #334155;  --badge-slate-text: #94a3b8;
-    --badge-purple-bg: #2e1065; --badge-purple-text: #d8b4fe;
-    --badge-default-bg: #334155; --badge-default-text: #94a3b8;
+    --badge-blue-bg: #1e3a5f;
+    --badge-blue-text: #93c5fd;
+    --badge-green-bg: #14532d;
+    --badge-green-text: #86efac;
+    --badge-amber-bg: #451a03;
+    --badge-amber-text: #fcd34d;
+    --badge-red-bg: #450a0a;
+    --badge-red-text: #fca5a5;
+    --badge-slate-bg: #334155;
+    --badge-slate-text: #94a3b8;
+    --badge-purple-bg: #2e1065;
+    --badge-purple-text: #d8b4fe;
+    --badge-default-bg: #334155;
+    --badge-default-text: #94a3b8;
 
     /* Danger banner */
     --color-danger-bg: #450a0a;
@@ -119,7 +133,11 @@ html {
 body {
   background-color: var(--color-surface-1);
   color: var(--color-text-primary);
-  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
   min-height: 100dvh;
   overscroll-behavior-y: none;
 }
@@ -147,28 +165,53 @@ body {
 /* ─── Animations ──────────────────────────────────────────────────────────── */
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 @keyframes slide-up {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.animate-spin { animation: spin 1s linear infinite; }
-.animate-pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
-.animate-slide-up { animation: slide-up 0.25s ease-out; }
-.animate-fade-in { animation: fade-in 0.15s ease-out; }
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out;
+}
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out;
+}
 
 /* ─── Bottom Sheet ────────────────────────────────────────────────────────── */
 

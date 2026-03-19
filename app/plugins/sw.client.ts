@@ -8,10 +8,10 @@ export default defineNuxtPlugin(() => {
   // ─── Register Service Worker ────────────────────────────────────────────────
   navigator.serviceWorker
     .register('/sw.js', { scope: '/' })
-    .then(registration => {
+    .then((registration) => {
       console.log('[SW] Registered, scope:', registration.scope)
     })
-    .catch(err => {
+    .catch((err) => {
       console.warn('[SW] Registration failed:', err)
     })
 
