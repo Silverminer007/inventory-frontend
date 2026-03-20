@@ -17,6 +17,11 @@
   const selectedIds = ref<UUID[]>([])
   const showPrintSize = ref(false)
 
+  function cancelSelection() {
+    isSelecting.value = false
+    selectedIds.value = []
+  }
+
   function toggleSelect(id: UUID) {
     const idx = selectedIds.value.indexOf(id)
     if (idx === -1) {
@@ -346,10 +351,7 @@
         <button
           class="btn btn-ghost text-sm px-3 py-1.5"
           style="color: var(--color-text-muted)"
-          @click="
-            isSelecting = false
-            selectedIds = []
-          "
+          @click="cancelSelection"
         >
           Abbrechen
         </button>

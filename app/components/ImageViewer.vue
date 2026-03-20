@@ -24,6 +24,11 @@
   }
 
   // ─── Navigation ──────────────────────────────────────────────────────────────
+  function goToImage(i: number) {
+    currentIndex.value = i
+    resetTransform()
+  }
+
   function navigate(dir: 1 | -1) {
     const next = currentIndex.value + dir
     if (next < 0 || next >= props.images.length) return
@@ -236,10 +241,7 @@
             : 'width: 0.5rem; background: rgba(255,255,255,0.35)'
         "
         :aria-label="`Bild ${i + 1}`"
-        @click="
-          currentIndex = i
-          resetTransform()
-        "
+        @click="goToImage(i)"
       />
     </div>
   </div>

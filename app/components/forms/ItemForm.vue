@@ -172,6 +172,16 @@
     }
   }
 
+  function onContainerSelected(id: string) {
+    containerId.value = id
+    showContainerPicker.value = false
+  }
+
+  function onBarcodeDetected(code: string) {
+    barcode.value = code
+    showScanner.value = false
+  }
+
   onUnmounted(() => {
     for (const url of filePreviews.value) URL.revokeObjectURL(url)
   })
@@ -424,19 +434,9 @@
 
   <ContainerPicker
     v-if="showContainerPicker"
-    @select="
-      containerId = $event
-      showContainerPicker = false
-    "
+    @select="onContainerSelected"
     @close="showContainerPicker = false"
   />
 
-  <BarcodeScanner
-    v-if="showScanner"
-    @detected="
-      barcode = $event
-      showScanner = false
-    "
-    @close="showScanner = false"
-  />
+  <BarcodeScanner v-if="showScanner" @detected="onBarcodeDetected" @close="showScanner = false" />
 </template>

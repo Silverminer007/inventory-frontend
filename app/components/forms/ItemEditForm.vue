@@ -141,6 +141,11 @@
     }
   }
 
+  function onBarcodeDetected(code: string) {
+    barcode.value = code
+    showScanner.value = false
+  }
+
   async function confirmDelete() {
     isDeleting.value = true
     try {
@@ -342,14 +347,7 @@
     @close="showMoveSheet = false"
   />
 
-  <BarcodeScanner
-    v-if="showScanner"
-    @detected="
-      barcode = $event
-      showScanner = false
-    "
-    @close="showScanner = false"
-  />
+  <BarcodeScanner v-if="showScanner" @detected="onBarcodeDetected" @close="showScanner = false" />
 
   <ConfirmSheet
     v-if="showDeleteConfirm"
