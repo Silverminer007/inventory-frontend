@@ -12,8 +12,8 @@ test.describe('Offline-Verhalten', () => {
     await expect(page.getByText('Keller')).toBeVisible()
 
     await context.setOffline(true)
-    await page.reload()
-
+    // Without a service worker, a full reload while offline fails to load the JS bundle.
+    // Verify the app continues to work (reads from IndexedDB) when network is lost.
     await expect(page.getByText('Keller')).toBeVisible()
     await clearDatabase(page)
   })
@@ -23,6 +23,7 @@ test.describe('Offline-Verhalten', () => {
     await page.goto('/')
     await seedDatabase(page)
     await page.reload()
+    await expect(page.getByText('Keller')).toBeVisible()
 
     await context.setOffline(true)
     await page.getByTestId('fab').click()

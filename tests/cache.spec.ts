@@ -6,6 +6,7 @@ test.describe('Cache-Management', () => {
   test.beforeEach(async ({ page }) => {
     await mockBackend(page)
     await page.goto('/settings')
+    await page.waitForLoadState('networkidle')
     await seedDatabase(page)
     await page.reload()
   })
@@ -33,7 +34,12 @@ test.describe('Cache-Management', () => {
   test('zeigt Warnung bei pending Commands', async ({ page }) => {
     // Inject a pending command
     await page.evaluate(async () => {
+      let attempts = 0
+      while (!(window as any).__db && attempts++ < 50) {
+        await new Promise((r) => setTimeout(r, 100))
+      }
       const db = (window as any).__db
+      if (!db) throw new Error('__db not available')
       await db.commandQueue.put({
         commandId: 'test-pending-cmd',
         commandType: 'ITEM_CREATE',
