@@ -4,8 +4,6 @@
   import { useSearch, highlight, type SearchResult } from '~/composables/useSearch'
   import { containerConfig } from '~/utils/containerUtils'
 
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
   const route = useRoute()
 
   const search = useSearch()
@@ -38,11 +36,7 @@
     isSearching.value = true
     error.value = null
     try {
-      results.value = await search.searchWithOnlineMerge(
-        query.value.trim(),
-        activeTags.value,
-        apiBase,
-      )
+      results.value = await search.searchWithEnsuredIndex(query.value.trim(), activeTags.value)
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Suchfehler'
     } finally {

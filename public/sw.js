@@ -62,7 +62,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
 
   // API requests: Network-first, cache fallback
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/commands')) {
+  if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirstWithCache(event.request, API_CACHE))
     return
   }

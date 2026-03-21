@@ -16,8 +16,6 @@
 
   const commands = useCommands()
   const db = useDatabase()
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
 
   const step = ref<1 | 2>(1)
   const nameInput = ref<HTMLInputElement | null>(null)
@@ -70,7 +68,7 @@
     isLoadingSuggestions.value = true
     try {
       const res = await fetch(
-        `${apiBase}/api/v1/items/tags/suggest?item=${encodeURIComponent(name.value.trim())}`,
+        `/api/v1/items/tags/suggest?item=${encodeURIComponent(name.value.trim())}`,
       )
       if (res.ok) {
         suggestedTags.value = (await res.json()) as string[]
@@ -151,7 +149,7 @@
           const form = new FormData()
           form.append('file', file)
           form.append('isPrimary', 'false')
-          const res = await fetch(`${apiBase}/api/v1/items/${itemId}/images`, {
+          const res = await fetch(`/api/v1/items/${itemId}/images`, {
             method: 'POST',
             body: form,
           })

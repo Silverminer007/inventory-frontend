@@ -1,20 +1,13 @@
-import { $fetch } from 'ofetch'
-
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
   const path = event.context.params?.path || ''
   const query = getQuery(event)
-  const apiUrl = `${config.apiBase}/api/${path}`
+  const queryString = new URLSearchParams(query as Record<string, string>).toString()
+  const apiUrl = `${config.apiBase}/api/${path}${queryString ? `?${queryString}` : ''}`
 
-  let body
-  if (['POST', 'PUT', 'PATCH'].includes(event.method)) {
-    body = await readBody(event)
-  }
+  delete event.node.req.headers['origin']
+  delete event.node.req.headers['referer']
 
-  return await $fetch(apiUrl, {
-    method: event.method,
-    query,
-    body,
-  })
+  return proxyRequest(event, apiUrl)
 })

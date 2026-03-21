@@ -123,7 +123,7 @@ export interface CommandResultDTO {
   conflictInfo?: ConflictInfo | null
 }
 
-/** Shape returned by GET /commands?since=... */
+/** Shape returned by GET `/api/v1/commands`?since=... */
 export interface AppliedCommandDTO {
   commandId: UUID
   commandType: CommandType

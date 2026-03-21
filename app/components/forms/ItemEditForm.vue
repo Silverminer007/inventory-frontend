@@ -18,8 +18,6 @@
   const commands = useCommands()
   const db = useDatabase()
   const router = useRouter()
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
 
   const name = ref(props.item.name)
   const description = ref(props.item.description ?? '')
@@ -103,7 +101,7 @@
           const form = new FormData()
           form.append('file', file)
           form.append('isPrimary', 'false')
-          const res = await fetch(`${apiBase}/api/v1/items/${itemId}/images`, {
+          const res = await fetch(`/api/v1/items/${itemId}/images`, {
             method: 'POST',
             body: form,
           })

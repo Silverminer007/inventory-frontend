@@ -16,8 +16,6 @@
   }>()
 
   const commands = useCommands()
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
 
   const nameInput = ref<HTMLInputElement | null>(null)
   const name = ref('')
@@ -92,7 +90,7 @@
       form.append('file', file)
       form.append('isPrimary', 'false')
       try {
-        await fetch(`${apiBase}/api/v1/containers/${containerId}/images`, {
+        await fetch(`/api/v1/containers/${containerId}/images`, {
           method: 'POST',
           body: form,
         })

@@ -13,8 +13,6 @@ const pendingCommandCount: Ref<number> = ref(0)
 
 export function useSync() {
   const db = useDatabase()
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -100,7 +98,7 @@ export function useSync() {
         const form = new FormData()
         form.append('file', img.blob, img.filename)
         form.append('isPrimary', String(img.isPrimary))
-        const res = await fetch(`${apiBase}/api/v1/${entityType}s/${entityId}/images`, {
+        const res = await fetch(`/api/v1/${entityType}s/${entityId}/images`, {
           method: 'POST',
           body: form,
         })
@@ -139,8 +137,8 @@ export function useSync() {
 
     try {
       const [containersRes, itemsRes] = await Promise.all([
-        fetch(`${apiBase}/api/v1/containers`),
-        fetch(`${apiBase}/api/v1/items`),
+        fetch(`/api/v1/containers`),
+        fetch(`/api/v1/items`),
       ])
 
       if (!containersRes.ok || !itemsRes.ok) {
@@ -175,8 +173,8 @@ export function useSync() {
   // ─── deltaSync ─────────────────────────────────────────────────────────────
 
   async function fetchCommandsSince(since: string): Promise<AppliedCommandDTO[]> {
-    const res = await fetch(`${apiBase}/commands?since=${encodeURIComponent(since)}`)
-    if (!res.ok) throw new Error(`GET /commands failed: ${res.status}`)
+    const res = await fetch(`/api/v1/commands?since=${encodeURIComponent(since)}`)
+    if (!res.ok) throw new Error(`GET /api/v1/commands failed: ${res.status}`)
     return res.json()
   }
 
@@ -246,7 +244,7 @@ export function useSync() {
         let results: CommandResultDTO[]
 
         try {
-          const res = await fetch(`${apiBase}/commands`, {
+          const res = await fetch(`/api/v1/commands`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),

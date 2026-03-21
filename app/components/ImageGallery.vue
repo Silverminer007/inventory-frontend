@@ -14,8 +14,6 @@
     close: []
   }>()
 
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
   const db = useDatabase()
 
   const isUploading = ref(false)
@@ -53,7 +51,7 @@
         const form = new FormData()
         form.append('file', img.blob, img.filename)
         form.append('isPrimary', String(img.isPrimary))
-        const res = await fetch(`${apiBase}/api/v1/${props.entityType}s/${props.entityId}/images`, {
+        const res = await fetch(`/api/v1/${props.entityType}s/${props.entityId}/images`, {
           method: 'POST',
           body: form,
         })
@@ -114,7 +112,7 @@
         const form = new FormData()
         form.append('file', file)
         form.append('isPrimary', 'false')
-        const res = await fetch(`${apiBase}/api/v1/${props.entityType}s/${props.entityId}/images`, {
+        const res = await fetch(`/api/v1/${props.entityType}s/${props.entityId}/images`, {
           method: 'POST',
           body: form,
         })
@@ -133,7 +131,7 @@
     isSettingPrimaryId.value = img.id
     error.value = null
     try {
-      const res = await fetch(`${apiBase}/api/v1/images/${img.id}/set-primary`, { method: 'POST' })
+      const res = await fetch(`/api/v1/images/${img.id}/set-primary`, { method: 'POST' })
       if (!res.ok) throw new Error('Fehler beim Setzen des Hauptbildes')
       emit('updated')
     } catch (err) {
@@ -147,7 +145,7 @@
     isDeletingId.value = img.id
     error.value = null
     try {
-      const res = await fetch(`${apiBase}/api/v1/images/${img.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/v1/images/${img.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Löschen fehlgeschlagen')
       emit('updated')
     } catch (err) {

@@ -3,7 +3,7 @@ import { TEST_CONTAINERS, TEST_ITEMS } from './db'
 
 export async function mockBackend(page: Page) {
   // Block real sync on first load (return empty command log)
-  await page.route('**/commands', async (route) => {
+  await page.route('**/commands**', async (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: [] })
     }
@@ -29,8 +29,6 @@ export async function mockBackend(page: Page) {
   await page.route('**/api/v1/containers', (route) => route.fulfill({ json: TEST_CONTAINERS }))
   await page.route('**/api/v1/items', (route) => route.fulfill({ json: TEST_ITEMS }))
   await page.route('**/api/v1/items/search**', (route) => route.fulfill({ json: [] }))
-  await page.route('**/api/v1/items/tags**', (route) => route.fulfill({ json: [] }))
-  // Registered after the general tags route so it takes precedence (Playwright LIFO matching)
   await page.route('**/api/v1/items/tags/suggest**', (route) =>
     route.fulfill({ json: ['Werkzeug', 'Metall', 'Klein'] }),
   )

@@ -1,7 +1,7 @@
 import Fuse, { type FuseResultMatch } from 'fuse.js'
 import { useDatabase } from '~/composables/useDatabase'
 import { getBreadcrumb } from '~/utils/containerUtils'
-import type { LocalItem, Container } from '~/types/inventory'
+import type { Container, LocalItem } from '~/types/inventory'
 
 export interface SearchResult {
   type: 'item' | 'container'
@@ -119,45 +119,13 @@ export function useSearch() {
     return [...containerResults, ...itemResults].sort((a, b) => a.score - b.score)
   }
 
-  async function searchWithOnlineMerge(
+  async function searchWithEnsuredIndex(
     query: string,
     activeTags: string[],
-    apiBase: string,
   ): Promise<SearchResult[]> {
     await ensureIndex()
 
-    // Run local search
-    const local = search(query, activeTags)
-
-    if (!query.trim() || typeof navigator === 'undefined' || !navigator.onLine) {
-      return local
-    }
-
-    // Merge with online results in background
-    try {
-      const params = new URLSearchParams()
-      if (query) params.set('q', query)
-      if (activeTags.length) params.set('tags', activeTags.join(','))
-      const res = await fetch(`${apiBase}/api/v1/items/search?${params}`)
-      if (res.ok) {
-        const onlineItems: LocalItem[] = await res.json()
-        const localItemIds = new Set(local.filter((r) => r.type === 'item').map((r) => r.item!.id))
-        const extra: SearchResult[] = onlineItems
-          .filter((i) => !localItemIds.has(i.id))
-          .map((item) => ({
-            type: 'item' as const,
-            item,
-            score: 0.5,
-            matches: undefined,
-            breadcrumb: item.containerId ? getBreadcrumb(item.containerId, allContainersCache) : [],
-          }))
-        return [...local, ...extra]
-      }
-    } catch {
-      /* offline or error — use local only */
-    }
-
-    return local
+    return search(query, activeTags)
   }
 
   async function getAllTags(): Promise<{ tag: string; count: number }[]> {
@@ -173,7 +141,7 @@ export function useSearch() {
       .sort((a, b) => b.count - a.count)
   }
 
-  return { buildIndex, refreshIndex, ensureIndex, search, searchWithOnlineMerge, getAllTags }
+  return { refreshIndex, ensureIndex, search, searchWithEnsuredIndex, getAllTags }
 }
 
 /** Highlight matched characters in a string using Fuse match indices */

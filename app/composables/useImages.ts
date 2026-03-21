@@ -3,8 +3,6 @@ import { useDatabase } from '~/composables/useDatabase'
 
 export function useImages() {
   const db = useDatabase()
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
 
   async function loadImagesForItem(itemId: string): Promise<Image[]> {
     const cached = await db.getImagesForItem(itemId)
@@ -12,7 +10,7 @@ export function useImages() {
 
     if (typeof navigator !== 'undefined' && navigator.onLine) {
       try {
-        const res = await fetch(`${apiBase}/api/v1/items/${itemId}/images`)
+        const res = await fetch(`/api/v1/items/${itemId}/images`)
         if (res.ok) {
           const images: Image[] = await res.json()
           for (const img of images) await db.upsertImage(img)
@@ -31,7 +29,7 @@ export function useImages() {
 
     if (typeof navigator !== 'undefined' && navigator.onLine) {
       try {
-        const res = await fetch(`${apiBase}/api/v1/containers/${containerId}/images`)
+        const res = await fetch(`/api/v1/containers/${containerId}/images`)
         if (res.ok) {
           const images: Image[] = await res.json()
           for (const img of images) await db.upsertImage(img)

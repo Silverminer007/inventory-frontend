@@ -9,7 +9,6 @@
   const { db } = useDatabase()
   const sync = useSync()
   const cache = useCacheManager()
-  const config = useRuntimeConfig()
 
   const stats = ref({ containers: 0, items: 0, images: 0, pending: 0 })
   const isSyncing = ref(false)
@@ -192,15 +191,6 @@
       <div class="flex justify-between text-sm">
         <span style="color: var(--color-text-secondary)">Version</span>
         <span style="color: var(--color-text-primary)">1.0.0</span>
-      </div>
-      <div class="flex justify-between text-sm">
-        <span style="color: var(--color-text-secondary)">Backend</span>
-        <span
-          class="font-mono text-xs truncate max-w-[180px]"
-          style="color: var(--color-text-primary)"
-        >
-          {{ (config.public as { apiBase: string }).apiBase }}
-        </span>
       </div>
     </section>
   </div>
