@@ -58,6 +58,7 @@ export function useCommands() {
         }
         await db.upsertContainer(container)
         entry.entityId = id
+        entry.payload = container as unknown as Record<string, unknown>
         result = container as unknown as T
         break
       }
@@ -109,6 +110,7 @@ export function useCommands() {
         }
         await db.upsertItem(item)
         entry.entityId = id
+        entry.payload = item as unknown as Record<string, unknown>
         result = item as unknown as T
         break
       }
