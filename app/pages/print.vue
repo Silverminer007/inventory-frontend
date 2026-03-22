@@ -9,7 +9,7 @@
   const route = useRoute()
   const db = useDatabase()
 
-  type PrintSize = 'A4' | 'A5' | 'A6' | 'A7'
+  type PrintSize = 'A4' | 'A5' | 'A6' | 'A7' | 'A8'
   const size = (route.query.size as PrintSize) ?? 'A6'
 
   const containerIds = ((route.query.containers as string) ?? '').split(',').filter(Boolean)
@@ -31,8 +31,9 @@
   > = {
     A4: { perPage: 1, cols: 1, qrSize: 240, namePx: 120 },
     A5: { perPage: 2, cols: 1, qrSize: 180, namePx: 96 },
-    A6: { perPage: 4, cols: 2, qrSize: 120, namePx: 64 },
-    A7: { perPage: 8, cols: 2, qrSize: 72, namePx: 36 },
+    A6: { perPage: 4, cols: 2, qrSize: 150, namePx: 64 },
+    A7: { perPage: 8, cols: 2, qrSize: 100, namePx: 36 },
+    A8: { perPage: 16, cols: 4, qrSize: 100, namePx: 36 },
   }
 
   const cfg = SIZE_CONFIG[size]
@@ -141,7 +142,7 @@
         <div class="label-grid" :style="`grid-template-columns: repeat(${cfg.cols}, 1fr)`">
           <div v-for="label in page" :key="label.id" class="label-cell">
             <!-- Type badge -->
-            <div class="lbl-badge">
+            <div v-if="size !== 'A8'" class="lbl-badge">
               {{ label.typeLabel }}
             </div>
 
@@ -153,19 +154,19 @@
             </div>
 
             <!-- Path -->
-            <div v-if="label.path" class="lbl-path">
+            <div v-if="label.path && size !== 'A8'" class="lbl-path">
               {{ label.path }}
             </div>
 
             <!-- Position -->
-            <div v-if="label.position && size !== 'A7'" class="lbl-position">
+            <div v-if="label.position && size !== 'A7' && size !== 'A8'" class="lbl-position">
               📍 {{ label.position }}
             </div>
 
             <!-- QR code -->
             <div class="lbl-qr">
               <QrCode :value="label.qrUrl" :size="cfg.qrSize" />
-              <div v-if="size !== 'A7'" class="lbl-url">
+              <div v-if="size !== 'A7' && size !== 'A8'" class="lbl-url">
                 {{ label.qrUrl }}
               </div>
             </div>
@@ -324,8 +325,15 @@
       display: none !important;
     }
 
+    /* Default: A4 portrait (used by A5 and A7) */
     @page {
       size: A4 portrait;
+      margin: 8mm;
+    }
+
+    /* Named page for A4 and A6: landscape */
+    @page a4-landscape {
+      size: A4 landscape;
       margin: 8mm;
     }
 
@@ -341,6 +349,26 @@
       break-after: page;
       break-inside: avoid;
       overflow: hidden;
+    }
+
+    /* A4 landscape: single label on landscape page */
+    .size-a4 {
+      page: a4-landscape;
+      width: 281mm; /* 297 - 2×8mm */
+      height: 194mm; /* 210 - 2×8mm */
+    }
+
+    /* A6 landscape: 4 labels on A4 landscape sheet (each label is wider than tall) */
+    .size-a6 {
+      page: a4-landscape;
+      width: 281mm;
+      height: 194mm;
+    }
+
+    .size-a8 {
+      page: a4-landscape;
+      width: 281mm;
+      height: 194mm;
     }
 
     .label-grid {

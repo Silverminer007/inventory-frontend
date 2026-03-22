@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  export type PrintSize = 'A4' | 'A5' | 'A6' | 'A7'
+  export type PrintSize = 'A4' | 'A5' | 'A6' | 'A7' | 'A8'
 
   const emit = defineEmits<{
     select: [size: PrintSize]
@@ -14,6 +14,7 @@
     cols: number
     rows: number
   }> = [
+    { size: 'A8', desc: 'Sehr klein', mm: '52 × 74 mm', perPage: 16, cols: 4, rows: 4 },
     { size: 'A7', desc: 'Klein', mm: '74 × 105 mm', perPage: 8, cols: 2, rows: 4 },
     { size: 'A6', desc: 'Mittel', mm: '105 × 148 mm', perPage: 4, cols: 2, rows: 2 },
     { size: 'A5', desc: 'Groß', mm: '148 × 210 mm', perPage: 2, cols: 1, rows: 2 },
