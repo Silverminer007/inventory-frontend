@@ -11,15 +11,19 @@
       const url = new URL(value)
       const path = url.pathname
 
-      const itemMatch = path.match(/^\/items\/(\d+)$/)
+      const itemMatch = path.match(
+        /^\/items\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      )
       if (itemMatch) {
-        router.push(`/items/${itemMatch[1]}`)
+        router.push(path)
         return
       }
 
-      const containerMatch = path.match(/^\/containers\/(\d+)$/)
+      const containerMatch = path.match(
+        /^\/containers\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      )
       if (containerMatch) {
-        router.push(`/containers/${containerMatch[1]}`)
+        router.push(path)
         return
       }
     } catch {
