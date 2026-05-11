@@ -3,7 +3,7 @@
   import { useRouter } from 'vue-router'
   import { useCommands } from '~/composables/useCommands'
   import { containerConfig, type ContainerType } from '~/utils/containerUtils'
-  import type { Container } from '~/types/inventory'
+  import type { Category, Container } from '~/types/inventory'
 
   const props = defineProps<{
     container: Container
@@ -21,7 +21,16 @@
   const name = ref(props.container.name)
   const description = ref(props.container.description ?? '')
   const position = ref(props.container.position ?? '')
+  const selectedCategory = ref<Category | null>(
+    props.container.primaryCategory ? { ...props.container.primaryCategory, version: 0 } : null,
+  )
+  const showCategoryPicker = ref(false)
   const isSubmitting = ref(false)
+
+  function onCategorySelected(cat: Category | null) {
+    selectedCategory.value = cat
+    showCategoryPicker.value = false
+  }
   const isDeleting = ref(false)
   const error = ref<string | null>(null)
   const showMoveSheet = ref(false)
@@ -39,6 +48,7 @@
         name: name.value.trim(),
         description: description.value.trim() || null,
         position: position.value.trim() || null,
+        categoryId: selectedCategory.value?.id ?? null,
       }
       const updated = await commands.executeCommand<Container>(
         'CONTAINER_UPDATE',
@@ -130,6 +140,35 @@
         />
       </div>
 
+      <!-- Category -->
+      <div>
+        <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
+          Kategorie <span style="color: var(--color-text-muted)">(optional)</span>
+        </label>
+        <button
+          type="button"
+          class="search-input w-full text-left flex items-center justify-between"
+          style="padding-left: 0.875rem; padding-right: 0.875rem"
+          @click="showCategoryPicker = true"
+        >
+          <span v-if="selectedCategory" class="flex items-center gap-2">
+            <span
+              class="px-2 py-0.5 rounded-md text-xs font-mono font-bold uppercase"
+              style="background: var(--color-nav-active-bg); color: var(--color-accent)"
+            >
+              {{ selectedCategory.shortCode }}
+            </span>
+            <span style="color: var(--color-text-primary)">{{ selectedCategory.name }}</span>
+          </span>
+          <span v-else style="color: var(--color-text-muted)">Kategorie wählen…</span>
+          <Icon
+            icon="mdi:chevron-right"
+            class="w-4 h-4 shrink-0"
+            style="color: var(--color-text-muted)"
+          />
+        </button>
+      </div>
+
       <!-- Position -->
       <div>
         <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
@@ -171,6 +210,13 @@
       </button>
     </form>
   </BottomSheet>
+
+  <CategoryPicker
+    v-if="showCategoryPicker"
+    :selected-id="selectedCategory?.id"
+    @select="onCategorySelected"
+    @close="showCategoryPicker = false"
+  />
 
   <ContainerPicker
     v-if="showMoveSheet"

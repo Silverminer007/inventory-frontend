@@ -2,7 +2,7 @@
   import { ref, onMounted } from 'vue'
   import { useCommands } from '~/composables/useCommands'
   import { containerConfig, type ContainerType } from '~/utils/containerUtils'
-  import type { Container } from '~/types/inventory'
+  import type { Category, Container } from '~/types/inventory'
   import type { UUID } from '~/utils/uuid'
 
   const props = defineProps<{
@@ -30,6 +30,14 @@
   onMounted(() => {
     nameInput.value?.focus()
   })
+
+  const selectedCategory = ref<Category | null>(null)
+  const showCategoryPicker = ref(false)
+
+  function onCategorySelected(cat: Category | null) {
+    selectedCategory.value = cat
+    showCategoryPicker.value = false
+  }
 
   const containerTypes: ContainerType[] = ['ROOM', 'SHELF', 'BOX']
 
@@ -67,6 +75,7 @@
         ...(props.parentContainerId !== undefined && {
           parentContainerId: props.parentContainerId,
         }),
+        ...(selectedCategory.value && { categoryId: selectedCategory.value.id }),
       }
 
       const container = await commands.executeCommand<Container>('CONTAINER_CREATE', payload)
@@ -182,6 +191,38 @@
         />
       </div>
 
+      <!-- Category -->
+      <div>
+        <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
+          Kategorie
+          <span v-if="selectedType !== 'BOX'" style="color: var(--color-text-muted)"
+            >(optional)</span
+          >
+        </label>
+        <button
+          type="button"
+          class="search-input w-full text-left flex items-center justify-between"
+          style="padding-left: 0.875rem; padding-right: 0.875rem"
+          @click="showCategoryPicker = true"
+        >
+          <span v-if="selectedCategory" class="flex items-center gap-2">
+            <span
+              class="px-2 py-0.5 rounded-md text-xs font-mono font-bold uppercase"
+              style="background: var(--color-nav-active-bg); color: var(--color-accent)"
+            >
+              {{ selectedCategory.shortCode }}
+            </span>
+            <span style="color: var(--color-text-primary)">{{ selectedCategory.name }}</span>
+          </span>
+          <span v-else style="color: var(--color-text-muted)">Kategorie wählen…</span>
+          <Icon
+            icon="mdi:chevron-right"
+            class="w-4 h-4 shrink-0"
+            style="color: var(--color-text-muted)"
+          />
+        </button>
+      </div>
+
       <!-- Position -->
       <div>
         <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
@@ -237,11 +278,22 @@
       </div>
 
       <!-- Submit -->
-      <button type="submit" class="btn btn-primary w-full" :disabled="isSubmitting || !name.trim()">
+      <button
+        type="submit"
+        class="btn btn-primary w-full"
+        :disabled="isSubmitting || !name.trim() || (selectedType === 'BOX' && !selectedCategory)"
+      >
         <LoadingSpinner v-if="isSubmitting" size="sm" />
         <Icon v-else icon="mdi:plus" class="w-4 h-4" />
         {{ containerConfig[selectedType]?.label ?? 'Container' }} anlegen
       </button>
     </form>
   </BottomSheet>
+
+  <CategoryPicker
+    v-if="showCategoryPicker"
+    :selected-id="selectedCategory?.id"
+    @select="onCategorySelected"
+    @close="showCategoryPicker = false"
+  />
 </template>

@@ -6,6 +6,7 @@ import type {
   Item,
   Image,
   Category,
+  CategoryInfo,
   LocalItem,
 } from '~/types/inventory'
 import { useDatabase } from '~/composables/useDatabase'
@@ -46,6 +47,11 @@ export function useCommands() {
       case 'CONTAINER_CREATE': {
         // Client generates the real UUID — no temp ID needed
         const id: UUID = entityId ?? generateId()
+        let primaryCategory: CategoryInfo | undefined
+        if (payload.categoryId) {
+          const cat = await db.getCategory(payload.categoryId as UUID)
+          if (cat) primaryCategory = { id: cat.id, name: cat.name, shortCode: cat.shortCode }
+        }
         const container: Container = {
           id,
           name: payload.name as string,
@@ -56,10 +62,11 @@ export function useCommands() {
           version: 0,
           itemCount: 0,
           totalItemCount: 0,
+          ...(primaryCategory !== undefined && { primaryCategory }),
         }
         await db.upsertContainer(container)
         entry.entityId = id
-        entry.payload = container as unknown as Record<string, unknown>
+        entry.payload = { ...payload, ...container } as Record<string, unknown>
         result = container as unknown as T
         break
       }
@@ -68,7 +75,19 @@ export function useCommands() {
         if (entityId) {
           const existing = await db.getContainer(entityId)
           if (existing) {
-            const updated: Container = { ...existing, ...payload, id: entityId }
+            const { categoryId, ...rest } = payload
+            let primaryCategory = existing.primaryCategory
+            if ('categoryId' in payload) {
+              if (categoryId) {
+                const cat = await db.getCategory(categoryId as UUID)
+                primaryCategory = cat
+                  ? { id: cat.id, name: cat.name, shortCode: cat.shortCode }
+                  : null
+              } else {
+                primaryCategory = null
+              }
+            }
+            const updated: Container = { ...existing, ...rest, id: entityId, primaryCategory }
             await db.upsertContainer(updated)
             result = updated as unknown as T
           }
