@@ -1,9 +1,10 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { useCommands } from '~/composables/useCommands'
   import { containerConfig, type ContainerType } from '~/utils/containerUtils'
   import type { Category, Container } from '~/types/inventory'
   import type { UUID } from '~/utils/uuid'
+  import { generateBoxName } from '~/utils/boxNames'
 
   const props = defineProps<{
     parentContainerId?: UUID
@@ -33,6 +34,26 @@
 
   const selectedCategory = ref<Category | null>(null)
   const showCategoryPicker = ref(false)
+
+  const isBox = computed(() => selectedType.value === 'BOX')
+
+  watch(selectedCategory, (cat) => {
+    if (isBox.value && cat) {
+      name.value = generateBoxName(cat.shortCode)
+    }
+  })
+
+  watch(selectedType, (type) => {
+    if (type === 'BOX' && selectedCategory.value) {
+      name.value = generateBoxName(selectedCategory.value.shortCode)
+    }
+  })
+
+  function regenerateName() {
+    if (selectedCategory.value) {
+      name.value = generateBoxName(selectedCategory.value.shortCode)
+    }
+  }
 
   function onCategorySelected(cat: Category | null) {
     selectedCategory.value = cat
@@ -115,8 +136,64 @@
     <form class="space-y-4" @submit.prevent="submit">
       <ErrorBanner v-if="error" :message="error" @dismiss="error = null" />
 
-      <!-- Name -->
-      <div>
+      <!-- Category (BOX: top, required) -->
+      <div v-if="isBox">
+        <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
+          Kategorie *
+        </label>
+        <button
+          type="button"
+          class="search-input w-full text-left flex items-center justify-between"
+          style="padding-left: 0.875rem; padding-right: 0.875rem"
+          @click="showCategoryPicker = true"
+        >
+          <span v-if="selectedCategory" class="flex items-center gap-2">
+            <span
+              class="px-2 py-0.5 rounded-md text-xs font-mono font-bold uppercase"
+              style="background: var(--color-nav-active-bg); color: var(--color-accent)"
+            >
+              {{ selectedCategory.shortCode }}
+            </span>
+            <span style="color: var(--color-text-primary)">{{ selectedCategory.name }}</span>
+          </span>
+          <span v-else style="color: var(--color-text-muted)">Kategorie wählen…</span>
+          <Icon
+            icon="mdi:chevron-right"
+            class="w-4 h-4 shrink-0"
+            style="color: var(--color-text-muted)"
+          />
+        </button>
+      </div>
+
+      <!-- Name (BOX: with regenerate button) -->
+      <div v-if="isBox">
+        <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
+          Name *
+        </label>
+        <div class="flex gap-2">
+          <input
+            ref="nameInput"
+            v-model="name"
+            type="text"
+            placeholder="Kategorie wählen für Auto-Name…"
+            class="search-input flex-1"
+            style="padding-left: 0.875rem; padding-right: 0.875rem"
+            required
+          />
+          <button
+            type="button"
+            class="btn btn-secondary shrink-0"
+            :disabled="!selectedCategory"
+            title="Neu generieren"
+            @click="regenerateName"
+          >
+            <Icon icon="mdi:refresh" class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Name (ROOM/SHELF: plain) -->
+      <div v-if="!isBox">
         <label
           for="container-name"
           class="block text-sm font-medium mb-1.5"
@@ -191,13 +268,10 @@
         />
       </div>
 
-      <!-- Category -->
-      <div>
+      <!-- Category (ROOM/SHELF: bottom, optional) -->
+      <div v-if="!isBox">
         <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
-          Kategorie
-          <span v-if="selectedType !== 'BOX'" style="color: var(--color-text-muted)"
-            >(optional)</span
-          >
+          Kategorie <span style="color: var(--color-text-muted)">(optional)</span>
         </label>
         <button
           type="button"
