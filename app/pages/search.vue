@@ -2,28 +2,38 @@
   import { ref, computed, watch, onMounted } from 'vue'
   import { useRoute } from 'vue-router'
   import { useSearch, highlight, type SearchResult } from '~/composables/useSearch'
+  import { useDatabase } from '~/composables/useDatabase'
   import { containerConfig } from '~/utils/containerUtils'
+  import type { Category } from '~/types/inventory'
 
   const route = useRoute()
 
   const search = useSearch()
+  const db = useDatabase()
 
   const query = ref((route.query.q as string) ?? '')
   const activeTags = ref<string[]>([])
+  const activeCategoryIds = ref<string[]>([])
+  const allCategories = ref<Category[]>([])
   const isSearching = ref(false)
   const error = ref<string | null>(null)
   const results = ref<SearchResult[]>([])
   const showTagFilter = ref(false)
+  const showCategoryFilter = ref(false)
+
+  const activeCategories = computed(() =>
+    allCategories.value.filter((c) => activeCategoryIds.value.includes(c.id)),
+  )
 
   // ─── Debounced search ──────────────────────────────────────────────────────────
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
   watch(
-    [query, activeTags],
+    [query, activeTags, activeCategoryIds],
     () => {
       if (debounceTimer) clearTimeout(debounceTimer)
       const q = query.value.trim()
-      if (q.length < 2 && activeTags.value.length === 0) {
+      if (q.length < 2 && activeTags.value.length === 0 && activeCategoryIds.value.length === 0) {
         results.value = []
         return
       }
@@ -36,7 +46,11 @@
     isSearching.value = true
     error.value = null
     try {
-      results.value = await search.searchWithEnsuredIndex(query.value.trim(), activeTags.value)
+      results.value = await search.searchWithEnsuredIndex(
+        query.value.trim(),
+        activeTags.value,
+        activeCategoryIds.value,
+      )
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Suchfehler'
     } finally {
@@ -63,19 +77,27 @@
     () =>
       !isSearching.value &&
       !hasResults.value &&
-      (query.value.trim().length >= 2 || activeTags.value.length > 0),
+      (query.value.trim().length >= 2 ||
+        activeTags.value.length > 0 ||
+        activeCategoryIds.value.length > 0),
   )
-  const emptyTitle = computed(() =>
-    activeTags.value.length > 0 && !query.value.trim()
-      ? 'Keine Items mit diesen Tags'
-      : `Keine Treffer für '${query.value}'`,
-  )
+  const emptyTitle = computed(() => {
+    if (!query.value.trim()) {
+      if (activeTags.value.length > 0 || activeCategoryIds.value.length > 0) {
+        return 'Keine Items mit diesen Filtern'
+      }
+    }
+    return `Keine Treffer für '${query.value}'`
+  })
 
   // ─── Input ref ────────────────────────────────────────────────────────────────
   const inputEl = ref<HTMLInputElement | null>(null)
 
   onMounted(async () => {
-    await search.ensureIndex()
+    await Promise.all([
+      search.ensureIndex(),
+      db.getAllCategories().then((c) => (allCategories.value = c)),
+    ])
     if (query.value.trim().length >= 2) {
       performSearch()
     } else {
@@ -129,7 +151,7 @@
           @click="showTagFilter = true"
         >
           <Icon icon="mdi:tag-multiple-outline" class="w-4 h-4" />
-          Filter
+          Tags
           <span
             v-if="activeTags.length > 0"
             class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
@@ -139,7 +161,29 @@
           </span>
         </button>
 
-        <!-- Active tag chips -->
+        <!-- Category filter button -->
+        <button
+          class="relative flex items-center gap-1.5 text-sm font-medium px-3 py-1 rounded-full shrink-0 transition-colors"
+          :style="
+            activeCategoryIds.length > 0
+              ? 'background: var(--color-nav-active-bg); color: var(--color-nav-active-text)'
+              : 'background: var(--color-surface-2); color: var(--color-text-secondary)'
+          "
+          data-testid="category-filter-button"
+          @click="showCategoryFilter = true"
+        >
+          <Icon icon="mdi:shape-outline" class="w-4 h-4" />
+          Kategorie
+          <span
+            v-if="activeCategoryIds.length > 0"
+            class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
+            style="background: var(--color-accent); color: #fff"
+          >
+            {{ activeCategoryIds.length }}
+          </span>
+        </button>
+
+        <!-- Active chips (tags + categories) -->
         <div class="flex gap-1.5 overflow-x-auto pb-0.5 flex-1">
           <button
             v-for="tag in activeTags"
@@ -149,6 +193,19 @@
             @click="activeTags = activeTags.filter((t) => t !== tag)"
           >
             {{ tag }}
+            <Icon icon="mdi:close" class="w-2.5 h-2.5" />
+          </button>
+          <button
+            v-for="cat in activeCategories"
+            :key="cat.id"
+            class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium shrink-0"
+            style="background: var(--color-nav-active-bg); color: var(--color-nav-active-text)"
+            @click="activeCategoryIds = activeCategoryIds.filter((id) => id !== cat.id)"
+          >
+            <span class="font-mono font-bold uppercase" style="color: var(--color-accent)">{{
+              cat.shortCode
+            }}</span>
+            {{ cat.name }}
             <Icon icon="mdi:close" class="w-2.5 h-2.5" />
           </button>
         </div>
@@ -172,10 +229,10 @@
 
     <!-- Empty query state -->
     <EmptyState
-      v-else-if="query.length < 2 && activeTags.length === 0"
+      v-else-if="query.length < 2 && activeTags.length === 0 && activeCategoryIds.length === 0"
       icon="mdi:magnify"
       title="Wonach suchst du?"
-      description="Mindestens 2 Zeichen eingeben oder Tag-Filter wählen"
+      description="Mindestens 2 Zeichen eingeben oder Filter wählen"
       data-testid="empty-state"
     />
 
@@ -184,7 +241,11 @@
       v-else-if="showEmpty"
       icon="mdi:text-search"
       :title="emptyTitle"
-      :description="activeTags.length > 0 ? 'Versuche andere Tags oder eine breitere Suche' : ''"
+      :description="
+        activeTags.length > 0 || activeCategoryIds.length > 0
+          ? 'Versuche andere Filter oder eine breitere Suche'
+          : ''
+      "
       data-testid="empty-state"
     />
 
@@ -404,6 +465,20 @@
       <div class="space-y-4">
         <TagFilter v-model="activeTags" />
         <button class="btn btn-primary w-full" @click="showTagFilter = false">
+          Filter anwenden
+        </button>
+      </div>
+    </BottomSheet>
+
+    <!-- ─── Category Filter Sheet ─────────────────────────────────────────── -->
+    <BottomSheet
+      v-if="showCategoryFilter"
+      title="Kategorie-Filter"
+      @close="showCategoryFilter = false"
+    >
+      <div class="space-y-4">
+        <CategoryFilter v-model="activeCategoryIds" />
+        <button class="btn btn-primary w-full" @click="showCategoryFilter = false">
           Filter anwenden
         </button>
       </div>

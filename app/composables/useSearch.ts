@@ -66,9 +66,13 @@ export function useSearch() {
     await buildIndex()
   }
 
-  function search(query: string, activeTags: string[]): SearchResult[] {
+  function search(
+    query: string,
+    activeTags: string[],
+    activeCategoryIds: string[] = [],
+  ): SearchResult[] {
     if (!itemFuse || !containerFuse) return []
-    if (!query.trim() && activeTags.length === 0) return []
+    if (!query.trim() && activeTags.length === 0 && activeCategoryIds.length === 0) return []
 
     let itemResults: SearchResult[] = []
     let containerResults: SearchResult[] = []
@@ -95,10 +99,17 @@ export function useSearch() {
           ? getBreadcrumb(r.item.parentContainerId, allContainersCache)
           : [],
       }))
-    } else if (activeTags.length > 0) {
-      // Tag-only filter: scan the cached items array directly
+    } else if (activeTags.length > 0 || activeCategoryIds.length > 0) {
+      // Filter-only: scan the cached items array directly
       return allItemsCache
-        .filter((item) => activeTags.every((tag) => item.tags?.includes(tag)))
+        .filter((item) => {
+          const tagMatch =
+            activeTags.length === 0 || activeTags.every((tag) => item.tags?.includes(tag))
+          const categoryMatch =
+            activeCategoryIds.length === 0 ||
+            (item.category?.id !== undefined && activeCategoryIds.includes(item.category.id))
+          return tagMatch && categoryMatch
+        })
         .map((item) => ({
           type: 'item' as const,
           item,
@@ -115,6 +126,13 @@ export function useSearch() {
       )
     }
 
+    // Apply category filter on top of fuzzy results
+    if (activeCategoryIds.length > 0) {
+      itemResults = itemResults.filter(
+        (r) => r.item?.category?.id !== undefined && activeCategoryIds.includes(r.item.category.id),
+      )
+    }
+
     // Merge and sort by score (lower = better)
     return [...containerResults, ...itemResults].sort((a, b) => a.score - b.score)
   }
@@ -122,10 +140,11 @@ export function useSearch() {
   async function searchWithEnsuredIndex(
     query: string,
     activeTags: string[],
+    activeCategoryIds: string[] = [],
   ): Promise<SearchResult[]> {
     await ensureIndex()
 
-    return search(query, activeTags)
+    return search(query, activeTags, activeCategoryIds)
   }
 
   async function getAllTags(): Promise<{ tag: string; count: number }[]> {
