@@ -5,6 +5,7 @@ import type {
   Container,
   Item,
   Image,
+  Category,
   LocalItem,
 } from '~/types/inventory'
 import { useDatabase } from '~/composables/useDatabase'
@@ -21,7 +22,7 @@ export function useCommands() {
    * 3. Enqueue in commandQueue as PENDING
    * 4. If online, immediately flush queue
    */
-  async function executeCommand<T extends Container | Item | Image | null>(
+  async function executeCommand<T extends Container | Item | Image | Category | null>(
     type: CommandType,
     payload: Record<string, unknown>,
     entityId?: UUID,
@@ -152,6 +153,38 @@ export function useCommands() {
       case 'IMAGE_SET_PRIMARY':
       case 'IMAGE_DELETE':
         break
+
+      case 'CATEGORY_CREATE': {
+        const id: UUID = entityId ?? generateId()
+        const category: Category = {
+          id,
+          name: payload.name as string,
+          shortCode: payload.shortCode as string,
+          description: payload.description as string | undefined,
+          version: 0,
+        }
+        await db.upsertCategory(category)
+        entry.entityId = id
+        result = category as unknown as T
+        break
+      }
+
+      case 'CATEGORY_UPDATE': {
+        if (entityId) {
+          const existing = await db.getCategory(entityId)
+          if (existing) {
+            const updated: Category = { ...existing, ...payload, id: entityId }
+            await db.upsertCategory(updated)
+            result = updated as unknown as T
+          }
+        }
+        break
+      }
+
+      case 'CATEGORY_DELETE': {
+        if (entityId) await db.deleteCategory(entityId)
+        break
+      }
     }
 
     // ─── Enqueue ─────────────────────────────────────────────────────────────

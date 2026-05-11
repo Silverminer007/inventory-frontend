@@ -1,6 +1,13 @@
 import { ref, computed, type Ref } from 'vue'
 import type { UUID } from '~/utils/uuid'
-import type { Container, Item, Image, AppliedCommandDTO, CommandResultDTO } from '~/types/inventory'
+import type {
+  Container,
+  Item,
+  Image,
+  Category,
+  AppliedCommandDTO,
+  CommandResultDTO,
+} from '~/types/inventory'
 import { useDatabase } from '~/composables/useDatabase'
 
 // ─── Module-level reactive state (shared across all composable instances) ──────
@@ -83,6 +90,16 @@ export function useSync() {
         // Update isPrimary flag — would need to unset others
         break
       }
+      case 'CATEGORY_CREATE':
+      case 'CATEGORY_UPDATE': {
+        const category = payload as unknown as Category
+        if (category.id) await db.upsertCategory(category)
+        break
+      }
+      case 'CATEGORY_DELETE': {
+        if (entityId) await db.deleteCategory(entityId)
+        break
+      }
     }
   }
 
@@ -125,6 +142,8 @@ export function useSync() {
       if (entityId) await uploadPendingImages('item', entityId)
     } else if (entityType === 'IMAGE') {
       await db.upsertImage(snapshot as Image)
+    } else if (entityType === 'CATEGORY') {
+      await db.upsertCategory(snapshot as Category)
     }
   }
 
@@ -133,26 +152,31 @@ export function useSync() {
   async function initialSync(): Promise<void> {
     if (isSyncing.value) return
     isSyncing.value = true
-    syncProgress.value = { current: 0, total: 2 }
+    syncProgress.value = { current: 0, total: 3 }
 
     try {
-      const [containersRes, itemsRes] = await Promise.all([
+      const [containersRes, itemsRes, categoriesRes] = await Promise.all([
         fetch(`/api/v1/containers`),
         fetch(`/api/v1/items`),
+        fetch(`/api/v1/categories`),
       ])
 
-      if (!containersRes.ok || !itemsRes.ok) {
+      if (!containersRes.ok || !itemsRes.ok || !categoriesRes.ok) {
         throw new Error('Initial sync failed: API error')
       }
 
       const containers: Container[] = await containersRes.json()
-      syncProgress.value = { current: 1, total: 2 }
+      syncProgress.value = { current: 1, total: 3 }
 
       const items: Item[] = await itemsRes.json()
-      syncProgress.value = { current: 2, total: 2 }
+      syncProgress.value = { current: 2, total: 3 }
+
+      const categories: Category[] = await categoriesRes.json()
+      syncProgress.value = { current: 3, total: 3 }
 
       await db.upsertContainers(containers)
       await db.upsertItems(items)
+      await db.upsertCategories(categories)
 
       const now = new Date()
       await db.setSyncMeta('lastSyncAt', now.toISOString())
@@ -288,6 +312,8 @@ export function useSync() {
                 await db.deleteContainer(cmd.entityId)
               } else if (cmd.commandType === 'ITEM_CREATE') {
                 await db.deleteItem(cmd.entityId)
+              } else if (cmd.commandType === 'CATEGORY_CREATE') {
+                await db.deleteCategory(cmd.entityId)
               }
             }
           } else if (result.status === 'CONFLICT') {
@@ -305,6 +331,9 @@ export function useSync() {
             }
             if (cmd.commandType === 'CONTAINER_CREATE' && cmd.entityId) {
               await db.deleteContainer(cmd.entityId)
+            }
+            if (cmd.commandType === 'CATEGORY_CREATE' && cmd.entityId) {
+              await db.deleteCategory(cmd.entityId)
             }
           }
         }
