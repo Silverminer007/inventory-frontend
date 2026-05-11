@@ -18,6 +18,7 @@ export function useCacheManager() {
         db.containers.clear(),
         db.items.clear(),
         db.images.clear(),
+        db.categories.clear(),
         db.commandQueue.clear(),
         db.syncMeta.clear(),
       ])
