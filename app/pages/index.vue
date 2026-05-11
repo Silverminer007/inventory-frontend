@@ -287,6 +287,9 @@
           <p class="text-sm truncate" style="color: var(--color-text-muted)">
             {{ childLabel(container) }}
           </p>
+          <Badge v-if="container.primaryCategory" variant="purple" class="mt-1">
+            {{ container.primaryCategory.name }}
+          </Badge>
         </div>
 
         <!-- Chevron -->

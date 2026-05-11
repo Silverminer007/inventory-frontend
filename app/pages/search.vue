@@ -278,15 +278,20 @@
               class="w-5 h-5 shrink-0"
               style="color: var(--color-accent)"
             />
-            <!-- eslint-disable-next-line vue/no-v-html -->
-            <span
-              class="font-medium truncate"
-              style="color: var(--color-text-primary)"
-              v-html="highlight(r.container!.name, r.matches, 'name')"
-            />
+            <div class="flex-1 min-w-0">
+              <!-- eslint-disable-next-line vue/no-v-html -->
+              <p
+                class="font-medium truncate"
+                style="color: var(--color-text-primary)"
+                v-html="highlight(r.container!.name, r.matches, 'name')"
+              />
+              <Badge v-if="r.container!.primaryCategory" variant="purple" class="mt-1">
+                {{ r.container!.primaryCategory.name }}
+              </Badge>
+            </div>
             <Icon
               icon="mdi:chevron-right"
-              class="w-4 h-4 ml-auto shrink-0"
+              class="w-4 h-4 shrink-0"
               style="color: var(--color-text-muted)"
             />
           </NuxtLink>
@@ -334,6 +339,9 @@
               >
                 {{ r.breadcrumb.map((c) => c.name).join(' → ') }}
               </p>
+              <Badge v-if="r.container!.primaryCategory" variant="purple" class="mt-1">
+                {{ r.container!.primaryCategory.name }}
+              </Badge>
             </div>
             <Icon
               icon="mdi:chevron-right"
@@ -385,6 +393,9 @@
               >
                 {{ r.breadcrumb.map((c) => c.name).join(' → ') }}
               </p>
+              <Badge v-if="r.container!.primaryCategory" variant="purple" class="mt-1">
+                {{ r.container!.primaryCategory.name }}
+              </Badge>
             </div>
             <Icon
               icon="mdi:chevron-right"
@@ -449,6 +460,9 @@
                   +{{ r.item!.tags!.length - 3 }}
                 </span>
               </div>
+              <Badge v-if="r.item!.category" variant="purple" class="mt-1">
+                {{ r.item!.category.name }}
+              </Badge>
             </div>
             <Icon
               icon="mdi:chevron-right"

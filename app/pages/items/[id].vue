@@ -209,6 +209,10 @@
               {{ item.barcode }}
             </span>
           </div>
+          <div v-if="item.category" class="flex items-center gap-2">
+            <Icon icon="mdi:shape-outline" class="w-4 h-4" style="color: var(--color-text-muted)" />
+            <Badge variant="purple">{{ item.category.name }}</Badge>
+          </div>
         </div>
 
         <!-- Tags -->

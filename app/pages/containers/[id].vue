@@ -318,6 +318,9 @@
             <Badge :variant="(containerCfg?.color as 'blue' | 'green' | 'amber') ?? 'default'">
               {{ containerCfg?.label }}
             </Badge>
+            <Badge v-if="container.primaryCategory" variant="purple">
+              {{ container.primaryCategory.name }}
+            </Badge>
           </div>
           <p
             v-if="container.description"
@@ -459,6 +462,9 @@
               <p class="text-sm truncate" style="color: var(--color-text-muted)">
                 {{ childLabel(child) }}
               </p>
+              <Badge v-if="child.primaryCategory" variant="purple" class="mt-1">
+                {{ child.primaryCategory.name }}
+              </Badge>
             </div>
             <Icon
               icon="mdi:chevron-right"
@@ -538,6 +544,9 @@
                   +{{ item.tags.length - 3 }}
                 </span>
               </div>
+              <Badge v-if="item.category" variant="purple" class="mt-1">
+                {{ item.category.name }}
+              </Badge>
               <p class="text-xs mt-0.5" style="color: var(--color-text-muted)">
                 Anzahl: {{ item.quantity }}
               </p>
