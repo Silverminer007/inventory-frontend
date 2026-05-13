@@ -4,6 +4,7 @@ import type {
   Container,
   LocalItem,
   Image,
+  Category,
   CommandQueueEntry,
   SyncMeta,
   PendingImage,
@@ -13,6 +14,7 @@ class InventoryDatabase extends Dexie {
   containers!: Table<Container, UUID>
   items!: Table<LocalItem, UUID>
   images!: Table<Image, UUID>
+  categories!: Table<Category, UUID>
   commandQueue!: Table<CommandQueueEntry, UUID>
   syncMeta!: Table<SyncMeta, string>
   pendingImages!: Table<PendingImage, number>
@@ -51,6 +53,10 @@ class InventoryDatabase extends Dexie {
           tx.table('syncMeta').clear(),
         ])
       })
+
+    this.version(4).stores({
+      categories: 'id, name, shortCode',
+    })
   }
 }
 
@@ -135,6 +141,28 @@ export function useDatabase() {
         return false
       })
       .toArray()
+  }
+
+  // ─── Categories ──────────────────────────────────────────────────────────────
+
+  async function getCategory(id: UUID): Promise<Category | undefined> {
+    return db.categories.get(id)
+  }
+
+  async function getAllCategories(): Promise<Category[]> {
+    return db.categories.toArray()
+  }
+
+  async function upsertCategory(category: Category): Promise<void> {
+    await db.categories.put(category)
+  }
+
+  async function upsertCategories(categories: Category[]): Promise<void> {
+    await db.categories.bulkPut(categories)
+  }
+
+  async function deleteCategory(id: UUID): Promise<void> {
+    await db.categories.delete(id)
   }
 
   // ─── Images ──────────────────────────────────────────────────────────────────
@@ -261,6 +289,12 @@ export function useDatabase() {
     upsertItems,
     deleteItem,
     searchItems,
+    // categories
+    getCategory,
+    getAllCategories,
+    upsertCategory,
+    upsertCategories,
+    deleteCategory,
     // images
     getImagesForItem,
     getImagesForContainer,

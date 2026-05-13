@@ -27,13 +27,13 @@
 
   const SIZE_CONFIG: Record<
     PrintSize,
-    { perPage: number; cols: number; qrSize: number; namePx: number }
+    { perPage: number; cols: number; qrSize: number; namePx: number; wrap: boolean }
   > = {
-    A4: { perPage: 1, cols: 1, qrSize: 240, namePx: 120 },
-    A5: { perPage: 2, cols: 1, qrSize: 180, namePx: 96 },
-    A6: { perPage: 4, cols: 2, qrSize: 150, namePx: 64 },
-    A7: { perPage: 8, cols: 2, qrSize: 100, namePx: 36 },
-    A8: { perPage: 16, cols: 4, qrSize: 100, namePx: 36 },
+    A4: { perPage: 1, cols: 1, qrSize: 240, namePx: 120, wrap: false },
+    A5: { perPage: 2, cols: 1, qrSize: 180, namePx: 96, wrap: false },
+    A6: { perPage: 4, cols: 2, qrSize: 150, namePx: 64, wrap: false },
+    A7: { perPage: 8, cols: 2, qrSize: 100, namePx: 36, wrap: true },
+    A8: { perPage: 16, cols: 4, qrSize: 100, namePx: 18, wrap: true },
   }
 
   const cfg = SIZE_CONFIG[size]
@@ -54,6 +54,10 @@
     document.querySelectorAll<HTMLElement>('.label-name').forEach((el) => {
       const parent = el.parentElement
       if (!parent) return
+      if (cfg.wrap) {
+        el.style.fontSize = `${cfg.namePx}px`
+        return
+      }
       let px = cfg.namePx
       el.style.fontSize = `${px}px`
       while (el.scrollWidth > parent.clientWidth && px > 10) {
@@ -281,6 +285,13 @@
     display: block;
   }
 
+  .size-a7 .lbl-name,
+  .size-a8 .lbl-name {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
   .lbl-path {
     font-size: 0.8rem;
     color: #444;
@@ -410,6 +421,13 @@
     .lbl-url {
       font-size: 6pt;
       color: #999;
+    }
+
+    .size-a7 .lbl-name,
+    .size-a8 .lbl-name {
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
   }
 </style>

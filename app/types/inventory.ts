@@ -15,6 +15,23 @@ export interface ContainerInfo {
   path: string
 }
 
+export interface CategoryInfo {
+  id: UUID
+  name: string
+  shortCode: string
+}
+
+/** Returned by GET /api/v1/categories and snapshots */
+export interface Category {
+  id: UUID
+  name: string
+  shortCode: string
+  description?: string | null
+  version: number
+  createdAt?: string | null
+  lastModified?: string | null
+}
+
 /** Returned by GET /api/v1/containers and snapshot in CommandResultDTO */
 export interface Container {
   id: UUID
@@ -33,6 +50,7 @@ export interface Container {
   totalItemCount?: number
   children?: Container[] | null
   parent?: ParentInfo | null
+  primaryCategory?: CategoryInfo | null
 }
 
 /** Tag with type info — stored locally, tags[] in server DTOs are plain strings */
@@ -71,6 +89,7 @@ export interface Item {
   locationPath?: string | null
   containerType?: string | null
   container?: ContainerInfo | null
+  category?: CategoryInfo | null
 }
 
 // ─── Event-Sourcing / Command DTOs ────────────────────────────────────────────
@@ -87,8 +106,11 @@ export type CommandType =
   | 'IMAGE_UPLOAD'
   | 'IMAGE_SET_PRIMARY'
   | 'IMAGE_DELETE'
+  | 'CATEGORY_CREATE'
+  | 'CATEGORY_UPDATE'
+  | 'CATEGORY_DELETE'
 
-export type EntityType = 'ITEM' | 'CONTAINER' | 'IMAGE'
+export type EntityType = 'ITEM' | 'CONTAINER' | 'IMAGE' | 'CATEGORY'
 
 export type CommandStatus = 'APPLIED' | 'FAILED' | 'CONFLICT'
 
@@ -118,7 +140,7 @@ export interface CommandResultDTO {
   entityType?: EntityType | null
   serverSequence?: number | null
   appliedAt?: string | null
-  snapshot?: Container | Item | Image | null
+  snapshot?: Container | Item | Image | Category | null
   error?: string | null
   conflictInfo?: ConflictInfo | null
 }

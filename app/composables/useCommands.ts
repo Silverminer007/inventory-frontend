@@ -5,6 +5,8 @@ import type {
   Container,
   Item,
   Image,
+  Category,
+  CategoryInfo,
   LocalItem,
 } from '~/types/inventory'
 import { useDatabase } from '~/composables/useDatabase'
@@ -21,7 +23,7 @@ export function useCommands() {
    * 3. Enqueue in commandQueue as PENDING
    * 4. If online, immediately flush queue
    */
-  async function executeCommand<T extends Container | Item | Image | null>(
+  async function executeCommand<T extends Container | Item | Image | Category | null>(
     type: CommandType,
     payload: Record<string, unknown>,
     entityId?: UUID,
@@ -45,6 +47,11 @@ export function useCommands() {
       case 'CONTAINER_CREATE': {
         // Client generates the real UUID — no temp ID needed
         const id: UUID = entityId ?? generateId()
+        let primaryCategory: CategoryInfo | undefined
+        if (payload.categoryId) {
+          const cat = await db.getCategory(payload.categoryId as UUID)
+          if (cat) primaryCategory = { id: cat.id, name: cat.name, shortCode: cat.shortCode }
+        }
         const container: Container = {
           id,
           name: payload.name as string,
@@ -55,10 +62,10 @@ export function useCommands() {
           version: 0,
           itemCount: 0,
           totalItemCount: 0,
+          ...(primaryCategory !== undefined && { primaryCategory }),
         }
         await db.upsertContainer(container)
         entry.entityId = id
-        entry.payload = container as unknown as Record<string, unknown>
         result = container as unknown as T
         break
       }
@@ -67,7 +74,19 @@ export function useCommands() {
         if (entityId) {
           const existing = await db.getContainer(entityId)
           if (existing) {
-            const updated: Container = { ...existing, ...payload, id: entityId }
+            const { categoryId, ...rest } = payload
+            let primaryCategory = existing.primaryCategory
+            if ('categoryId' in payload) {
+              if (categoryId) {
+                const cat = await db.getCategory(categoryId as UUID)
+                primaryCategory = cat
+                  ? { id: cat.id, name: cat.name, shortCode: cat.shortCode }
+                  : null
+              } else {
+                primaryCategory = null
+              }
+            }
+            const updated: Container = { ...existing, ...rest, id: entityId, primaryCategory }
             await db.upsertContainer(updated)
             result = updated as unknown as T
           }
@@ -152,6 +171,38 @@ export function useCommands() {
       case 'IMAGE_SET_PRIMARY':
       case 'IMAGE_DELETE':
         break
+
+      case 'CATEGORY_CREATE': {
+        const id: UUID = entityId ?? generateId()
+        const category: Category = {
+          id,
+          name: payload.name as string,
+          shortCode: payload.shortCode as string,
+          description: payload.description as string | undefined,
+          version: 0,
+        }
+        await db.upsertCategory(category)
+        entry.entityId = id
+        result = category as unknown as T
+        break
+      }
+
+      case 'CATEGORY_UPDATE': {
+        if (entityId) {
+          const existing = await db.getCategory(entityId)
+          if (existing) {
+            const updated: Category = { ...existing, ...payload, id: entityId }
+            await db.upsertCategory(updated)
+            result = updated as unknown as T
+          }
+        }
+        break
+      }
+
+      case 'CATEGORY_DELETE': {
+        if (entityId) await db.deleteCategory(entityId)
+        break
+      }
     }
 
     // ─── Enqueue ─────────────────────────────────────────────────────────────

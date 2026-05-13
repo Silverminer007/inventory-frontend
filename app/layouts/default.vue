@@ -34,6 +34,12 @@
   const navItems: NavItem[] = []
   navItems.push({ to: '/', icon: 'mdi:home-outline', iconActive: 'mdi:home', label: 'Übersicht' })
   navItems.push({ to: '/search', icon: 'mdi:magnify', iconActive: 'mdi:magnify', label: 'Suche' })
+  navItems.push({
+    to: '/categories',
+    icon: 'mdi:tag-multiple-outline',
+    iconActive: 'mdi:tag-multiple',
+    label: 'Kategorien',
+  })
   if (scannerAvailable.value) {
     navItems.push({
       to: '/scan',

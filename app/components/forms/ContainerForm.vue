@@ -1,9 +1,10 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { useCommands } from '~/composables/useCommands'
   import { containerConfig, type ContainerType } from '~/utils/containerUtils'
-  import type { Container } from '~/types/inventory'
+  import type { CategoryInfo, Container } from '~/types/inventory'
   import type { UUID } from '~/utils/uuid'
+  import { generateBoxName } from '~/utils/boxNames'
 
   const props = defineProps<{
     parentContainerId?: UUID
@@ -30,6 +31,28 @@
   onMounted(() => {
     nameInput.value?.focus()
   })
+
+  const selectedCategory = ref<CategoryInfo | null>(null)
+
+  const isBox = computed(() => selectedType.value === 'BOX')
+
+  watch(selectedCategory, (cat) => {
+    if (isBox.value && cat) {
+      name.value = generateBoxName(cat.shortCode)
+    }
+  })
+
+  watch(selectedType, (type) => {
+    if (type === 'BOX' && selectedCategory.value) {
+      name.value = generateBoxName(selectedCategory.value.shortCode)
+    }
+  })
+
+  function regenerateName() {
+    if (selectedCategory.value) {
+      name.value = generateBoxName(selectedCategory.value.shortCode)
+    }
+  }
 
   const containerTypes: ContainerType[] = ['ROOM', 'SHELF', 'BOX']
 
@@ -67,6 +90,7 @@
         ...(props.parentContainerId !== undefined && {
           parentContainerId: props.parentContainerId,
         }),
+        ...(selectedCategory.value && { categoryId: selectedCategory.value.id }),
       }
 
       const container = await commands.executeCommand<Container>('CONTAINER_CREATE', payload)
@@ -106,8 +130,38 @@
     <form class="space-y-4" @submit.prevent="submit">
       <ErrorBanner v-if="error" :message="error" @dismiss="error = null" />
 
-      <!-- Name -->
-      <div>
+      <!-- Category (BOX: top, required) -->
+      <CategoryPickerButton v-if="isBox" v-model="selectedCategory" :required="isBox" />
+
+      <!-- Name (BOX: with regenerate button) -->
+      <div v-if="isBox">
+        <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
+          Name *
+        </label>
+        <div class="flex gap-2">
+          <input
+            ref="nameInput"
+            v-model="name"
+            type="text"
+            placeholder="Kategorie wählen für Auto-Name…"
+            class="search-input flex-1"
+            style="padding-left: 0.875rem; padding-right: 0.875rem"
+            required
+          />
+          <button
+            type="button"
+            class="btn btn-secondary shrink-0"
+            :disabled="!selectedCategory"
+            title="Neu generieren"
+            @click="regenerateName"
+          >
+            <Icon icon="mdi:refresh" class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Name (ROOM/SHELF: plain) -->
+      <div v-if="!isBox">
         <label
           for="container-name"
           class="block text-sm font-medium mb-1.5"
@@ -182,6 +236,9 @@
         />
       </div>
 
+      <!-- Category (ROOM/SHELF: bottom, optional) -->
+      <CategoryPickerButton v-if="!isBox" v-model="selectedCategory" />
+
       <!-- Position -->
       <div>
         <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
@@ -237,7 +294,11 @@
       </div>
 
       <!-- Submit -->
-      <button type="submit" class="btn btn-primary w-full" :disabled="isSubmitting || !name.trim()">
+      <button
+        type="submit"
+        class="btn btn-primary w-full"
+        :disabled="isSubmitting || !name.trim() || (isBox && !selectedCategory)"
+      >
         <LoadingSpinner v-if="isSubmitting" size="sm" />
         <Icon v-else icon="mdi:plus" class="w-4 h-4" />
         {{ containerConfig[selectedType]?.label ?? 'Container' }} anlegen
