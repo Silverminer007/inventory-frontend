@@ -11,10 +11,12 @@ import type {
 } from '~/types/inventory'
 import { useDatabase } from '~/composables/useDatabase'
 import { useSync } from '~/composables/useSync'
+import { useSearch } from '~/composables/useSearch'
 
 export function useCommands() {
   const db = useDatabase()
   const sync = useSync()
+  const search = useSearch()
 
   /**
    * Execute a command:
@@ -138,7 +140,17 @@ export function useCommands() {
         if (entityId) {
           const existing = await db.getItem(entityId)
           if (existing) {
-            const updated: LocalItem = { ...existing, ...payload, id: entityId }
+            const { category: categoryPayload, ...rest } = payload
+            let category = existing.category
+            if ('category' in payload) {
+              if (categoryPayload) {
+                const cat = await db.getCategory((categoryPayload as { id: UUID }).id)
+                category = cat ? { id: cat.id, name: cat.name, shortCode: cat.shortCode } : null
+              } else {
+                category = null
+              }
+            }
+            const updated: LocalItem = { ...existing, ...rest, id: entityId, category }
             await db.upsertItem(updated)
             result = updated as unknown as T
           }
@@ -204,6 +216,9 @@ export function useCommands() {
         break
       }
     }
+
+    // ─── Refresh search index after any mutation ──────────────────────────────
+    search.refreshIndex().catch(console.error)
 
     // ─── Enqueue ─────────────────────────────────────────────────────────────
     await db.enqueuCommand(entry)
