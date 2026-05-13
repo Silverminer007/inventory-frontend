@@ -100,7 +100,11 @@ export function useSearch() {
           : [],
       }))
     } else if (activeTags.length > 0 || activeCategoryIds.length > 0) {
-      // Filter-only: scan the cached items array directly
+      // Filter-only mode (no text query): only items are returned. Containers
+      // are intentionally excluded here — they have no tags, and their category
+      // relationship is structural rather than descriptive. Surfacing all
+      // containers in a given category without a text query would produce an
+      // unsorted, potentially unbounded list with no relevance signal.
       return allItemsCache
         .filter((item) => {
           const tagMatch =
@@ -126,7 +130,13 @@ export function useSearch() {
       )
     }
 
-    // Apply category filter on top of fuzzy results
+    // Apply category filter to items only. containerResults are intentionally
+    // not filtered here: when a text query is present, a container that matches
+    // the query is a valid result regardless of its own category assignment.
+    // The category filter is an item-scoping tool ("show me Elektronik items"),
+    // not a structural filter ("hide non-Elektronik containers"). A user
+    // searching "Werkzeug" while filtering by "Elektronik" still wants to see
+    // the shelf named "Werkzeug-Regal" in the results.
     if (activeCategoryIds.length > 0) {
       itemResults = itemResults.filter(
         (r) => r.item?.category?.id !== undefined && activeCategoryIds.includes(r.item.category.id),

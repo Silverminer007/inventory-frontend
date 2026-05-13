@@ -222,8 +222,22 @@ const NOUNS: string[] = [
   'Zweig',
 ]
 
-export function generateBoxName(shortCode: string): string {
+// Combinatorial space: 112 adjectives × 110 nouns ≈ 12 k unique names per
+// shortCode. Single-call collision probability is negligible. When creating
+// many boxes in one session, pass existingNames so the function retries on
+// collision. After MAX_ATTEMPTS the fallback appends a timestamp as a
+// tiebreaker; this is unreachable in practice given the space size.
+const MAX_ATTEMPTS = 20
+
+export function generateBoxName(shortCode: string, existingNames?: ReadonlySet<string>): string {
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]!
+    const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)]!
+    const name = `${shortCode}-${adj}-${noun}`
+    if (!existingNames?.has(name)) return name
+  }
+  // Fallback: exhausted MAX_ATTEMPTS (extremely unlikely) — suffix with timestamp
   const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]!
   const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)]!
-  return `${shortCode}-${adj}-${noun}`
+  return `${shortCode}-${adj}-${noun}-${Date.now()}`
 }
