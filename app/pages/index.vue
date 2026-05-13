@@ -128,9 +128,9 @@
   async function loadData() {
     try {
       allContainers.value = await db.getAllContainers()
-      roots.value = allContainers.value.filter(
-        (c) => c.parentContainerId === null || c.parentContainerId === undefined,
-      )
+      roots.value = allContainers.value
+        .filter((c) => c.parentContainerId === null || c.parentContainerId === undefined)
+        .sort((a, b) => a.name.localeCompare(b.name))
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Unbekannter Fehler'
     }
@@ -178,7 +178,7 @@
 
   function onRoomCreated(container: Container) {
     showAddSheet.value = false
-    roots.value = [...roots.value, container]
+    roots.value = [...roots.value, container].sort((a, b) => a.name.localeCompare(b.name))
     allContainers.value = [...allContainers.value, container]
   }
 
