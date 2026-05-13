@@ -193,8 +193,12 @@
       }
 
       if (container.value) {
-        children.value = allContainers.value.filter((c) => c.parentContainerId === id.value)
-        items.value = await db.getItemsByContainer(id.value)
+        children.value = allContainers.value
+          .filter((c) => c.parentContainerId === id.value)
+          .sort((a, b) => a.name.localeCompare(b.name))
+        items.value = (await db.getItemsByContainer(id.value)).sort((a, b) =>
+          a.name.localeCompare(b.name),
+        )
         images.value = await imgLoader.loadImagesForContainer(id.value)
       }
     } catch (e) {
@@ -221,7 +225,7 @@
   function onChildContainerCreated(c: Container) {
     showAddContainerSheet.value = false
     showActionSheet.value = false
-    children.value = [...children.value, c]
+    children.value = [...children.value, c].sort((a, b) => a.name.localeCompare(b.name))
     allContainers.value = [...allContainers.value, c]
   }
 
