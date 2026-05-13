@@ -1,13 +1,13 @@
 <script setup lang="ts">
   import { ref } from 'vue'
-  import type { Category } from '~/types/inventory'
+  import type { CategoryInfo } from '~/types/inventory'
 
-  defineProps<{ modelValue: Category | null; required?: boolean }>()
-  const emit = defineEmits<{ 'update:modelValue': [Category | null] }>()
+  defineProps<{ modelValue: CategoryInfo | null; required?: boolean }>()
+  const emit = defineEmits<{ 'update:modelValue': [CategoryInfo | null] }>()
 
   const showPicker = ref(false)
 
-  function onSelect(cat: Category | null) {
+  function onSelect(cat: CategoryInfo | null) {
     emit('update:modelValue', cat)
     showPicker.value = false
   }

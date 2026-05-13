@@ -66,7 +66,6 @@ export function useCommands() {
         }
         await db.upsertContainer(container)
         entry.entityId = id
-        entry.payload = { ...payload, ...container } as Record<string, unknown>
         result = container as unknown as T
         break
       }

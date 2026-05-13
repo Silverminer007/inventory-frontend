@@ -491,7 +491,7 @@
       @close="showCategoryFilter = false"
     >
       <div class="space-y-4">
-        <CategoryFilter v-model="activeCategoryIds" />
+        <CategoryFilter v-model="activeCategoryIds" :all-categories="allCategories" />
         <button class="btn btn-primary w-full" @click="showCategoryFilter = false">
           Filter anwenden
         </button>

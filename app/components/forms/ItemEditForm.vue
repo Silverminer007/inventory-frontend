@@ -3,7 +3,7 @@
   import { useRouter } from 'vue-router'
   import { useCommands } from '~/composables/useCommands'
   import { useDatabase } from '~/composables/useDatabase'
-  import type { Category, LocalItem } from '~/types/inventory'
+  import type { CategoryInfo, LocalItem } from '~/types/inventory'
 
   const props = defineProps<{
     item: LocalItem
@@ -24,9 +24,7 @@
   const quantity = ref(props.item.quantity)
   const barcode = ref(props.item.barcode ?? '')
   const tags = ref<string[]>([...(props.item.tags ?? [])])
-  const selectedCategory = ref<Category | null>(
-    props.item.category ? { ...props.item.category, version: 0 } : null,
-  )
+  const selectedCategory = ref<CategoryInfo | null>(props.item.category ?? null)
   const tagInput = ref('')
   const isSubmitting = ref(false)
   const isDeleting = ref(false)

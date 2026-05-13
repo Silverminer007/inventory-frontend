@@ -1,29 +1,22 @@
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
-  import { useDatabase } from '~/composables/useDatabase'
+  import { computed } from 'vue'
   import type { Category } from '~/types/inventory'
 
   const props = defineProps<{
     modelValue: string[]
+    allCategories: Category[]
   }>()
 
   const emit = defineEmits<{
     'update:modelValue': [ids: string[]]
   }>()
 
-  const db = useDatabase()
-  const allCategories = ref<Category[]>([])
-
-  onMounted(async () => {
-    allCategories.value = await db.getAllCategories()
-  })
-
   const activeCategories = computed(() =>
-    allCategories.value.filter((c) => props.modelValue.includes(c.id)),
+    props.allCategories.filter((c) => props.modelValue.includes(c.id)),
   )
 
   const suggestions = computed(() =>
-    allCategories.value.filter((c) => !props.modelValue.includes(c.id)),
+    props.allCategories.filter((c) => !props.modelValue.includes(c.id)),
   )
 
   function addCategory(id: string) {
@@ -100,6 +93,9 @@
       style="color: var(--color-text-muted)"
     >
       Keine Kategorien vorhanden
+    </div>
+    <div v-else class="py-2 text-sm text-center" style="color: var(--color-text-muted)">
+      Alle Kategorien ausgewählt
     </div>
   </div>
 </template>

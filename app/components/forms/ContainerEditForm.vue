@@ -3,7 +3,7 @@
   import { useRouter } from 'vue-router'
   import { useCommands } from '~/composables/useCommands'
   import { containerConfig, type ContainerType } from '~/utils/containerUtils'
-  import type { Category, Container } from '~/types/inventory'
+  import type { CategoryInfo, Container } from '~/types/inventory'
 
   const props = defineProps<{
     container: Container
@@ -21,9 +21,7 @@
   const name = ref(props.container.name)
   const description = ref(props.container.description ?? '')
   const position = ref(props.container.position ?? '')
-  const selectedCategory = ref<Category | null>(
-    props.container.primaryCategory ? { ...props.container.primaryCategory, version: 0 } : null,
-  )
+  const selectedCategory = ref<CategoryInfo | null>(props.container.primaryCategory ?? null)
   const isSubmitting = ref(false)
 
   const isDeleting = ref(false)

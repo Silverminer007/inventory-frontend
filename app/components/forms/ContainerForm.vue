@@ -2,7 +2,7 @@
   import { ref, computed, watch, onMounted } from 'vue'
   import { useCommands } from '~/composables/useCommands'
   import { containerConfig, type ContainerType } from '~/utils/containerUtils'
-  import type { Category, Container } from '~/types/inventory'
+  import type { CategoryInfo, Container } from '~/types/inventory'
   import type { UUID } from '~/utils/uuid'
   import { generateBoxName } from '~/utils/boxNames'
 
@@ -32,7 +32,7 @@
     nameInput.value?.focus()
   })
 
-  const selectedCategory = ref<Category | null>(null)
+  const selectedCategory = ref<CategoryInfo | null>(null)
 
   const isBox = computed(() => selectedType.value === 'BOX')
 
