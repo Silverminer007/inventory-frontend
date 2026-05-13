@@ -2,7 +2,7 @@
   import { ref, watch, onMounted, onUnmounted } from 'vue'
   import { useCommands } from '~/composables/useCommands'
   import { useDatabase } from '~/composables/useDatabase'
-  import type { LocalItem } from '~/types/inventory'
+  import type { Category, LocalItem } from '~/types/inventory'
   import type { UUID } from '~/utils/uuid'
 
   const props = defineProps<{
@@ -30,6 +30,7 @@
   const selectedFiles = ref<File[]>([])
   const filePreviews = ref<string[]>([])
   const showContainerPicker = ref(false)
+  const selectedCategory = ref<Category | null>(null)
 
   // Step 2 fields
   const tags = ref<string[]>([])
@@ -123,6 +124,7 @@
         ...(barcode.value && { barcode: barcode.value.trim() }),
         ...(containerId.value !== undefined && { containerId: containerId.value }),
         ...(tags.value.length > 0 && { tags: [...tags.value] }),
+        ...(selectedCategory.value && { categoryId: selectedCategory.value.id }),
       }
       const item = await commands.executeCommand<LocalItem>('ITEM_CREATE', payload)
       if (!item) throw new Error('Item konnte nicht erstellt werden')
@@ -295,6 +297,9 @@
           />
         </button>
       </div>
+
+      <!-- Category -->
+      <CategoryPickerButton v-model="selectedCategory" />
 
       <!-- Image Upload -->
       <div>

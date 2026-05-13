@@ -33,7 +33,6 @@
   })
 
   const selectedCategory = ref<Category | null>(null)
-  const showCategoryPicker = ref(false)
 
   const isBox = computed(() => selectedType.value === 'BOX')
 
@@ -53,11 +52,6 @@
     if (selectedCategory.value) {
       name.value = generateBoxName(selectedCategory.value.shortCode)
     }
-  }
-
-  function onCategorySelected(cat: Category | null) {
-    selectedCategory.value = cat
-    showCategoryPicker.value = false
   }
 
   const containerTypes: ContainerType[] = ['ROOM', 'SHELF', 'BOX']
@@ -137,33 +131,7 @@
       <ErrorBanner v-if="error" :message="error" @dismiss="error = null" />
 
       <!-- Category (BOX: top, required) -->
-      <div v-if="isBox">
-        <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
-          Kategorie *
-        </label>
-        <button
-          type="button"
-          class="search-input w-full text-left flex items-center justify-between"
-          style="padding-left: 0.875rem; padding-right: 0.875rem"
-          @click="showCategoryPicker = true"
-        >
-          <span v-if="selectedCategory" class="flex items-center gap-2">
-            <span
-              class="px-2 py-0.5 rounded-md text-xs font-mono font-bold uppercase"
-              style="background: var(--color-nav-active-bg); color: var(--color-accent)"
-            >
-              {{ selectedCategory.shortCode }}
-            </span>
-            <span style="color: var(--color-text-primary)">{{ selectedCategory.name }}</span>
-          </span>
-          <span v-else style="color: var(--color-text-muted)">Kategorie wählen…</span>
-          <Icon
-            icon="mdi:chevron-right"
-            class="w-4 h-4 shrink-0"
-            style="color: var(--color-text-muted)"
-          />
-        </button>
-      </div>
+      <CategoryPickerButton v-if="isBox" v-model="selectedCategory" :required="isBox" />
 
       <!-- Name (BOX: with regenerate button) -->
       <div v-if="isBox">
@@ -269,33 +237,7 @@
       </div>
 
       <!-- Category (ROOM/SHELF: bottom, optional) -->
-      <div v-if="!isBox">
-        <label class="block text-sm font-medium mb-1.5" style="color: var(--color-text-secondary)">
-          Kategorie <span style="color: var(--color-text-muted)">(optional)</span>
-        </label>
-        <button
-          type="button"
-          class="search-input w-full text-left flex items-center justify-between"
-          style="padding-left: 0.875rem; padding-right: 0.875rem"
-          @click="showCategoryPicker = true"
-        >
-          <span v-if="selectedCategory" class="flex items-center gap-2">
-            <span
-              class="px-2 py-0.5 rounded-md text-xs font-mono font-bold uppercase"
-              style="background: var(--color-nav-active-bg); color: var(--color-accent)"
-            >
-              {{ selectedCategory.shortCode }}
-            </span>
-            <span style="color: var(--color-text-primary)">{{ selectedCategory.name }}</span>
-          </span>
-          <span v-else style="color: var(--color-text-muted)">Kategorie wählen…</span>
-          <Icon
-            icon="mdi:chevron-right"
-            class="w-4 h-4 shrink-0"
-            style="color: var(--color-text-muted)"
-          />
-        </button>
-      </div>
+      <CategoryPickerButton v-if="!isBox" v-model="selectedCategory" />
 
       <!-- Position -->
       <div>
@@ -363,11 +305,4 @@
       </button>
     </form>
   </BottomSheet>
-
-  <CategoryPicker
-    v-if="showCategoryPicker"
-    :selected-id="selectedCategory?.id"
-    @select="onCategorySelected"
-    @close="showCategoryPicker = false"
-  />
 </template>
