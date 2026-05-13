@@ -75,7 +75,7 @@
         description: description.value.trim() || null,
         barcode: barcode.value.trim() || null,
         tags: [...tags.value],
-        categoryId: selectedCategory.value?.id ?? null,
+        category: selectedCategory.value ? { id: selectedCategory.value.id } : null,
       }
       const updated = await commands.executeCommand<LocalItem>(
         'ITEM_UPDATE',
