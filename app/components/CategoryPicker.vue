@@ -1,24 +1,30 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import { useDatabase } from '~/composables/useDatabase'
-  import type { Category } from '~/types/inventory'
+  import type { CategoryInfo } from '~/types/inventory'
   import type { UUID } from '~/utils/uuid'
 
-  defineProps<{
+  const props = defineProps<{
     selectedId?: UUID
+    categories?: CategoryInfo[]
   }>()
 
   const emit = defineEmits<{
-    select: [category: Category | null]
+    select: [category: CategoryInfo | null]
     close: []
   }>()
 
   const db = useDatabase()
-  const categories = ref<Category[]>([])
+  const loadedCategories = ref<CategoryInfo[]>([])
 
   onMounted(async () => {
-    categories.value = await db.getAllCategories()
+    if (!props.categories) {
+      loadedCategories.value = await db.getAllCategories()
+    }
   })
+
+  // Use prop if provided; fall back to DB-loaded list
+  const visibleCategories = computed(() => props.categories ?? loadedCategories.value)
 </script>
 
 <template>
@@ -36,7 +42,7 @@
 
       <!-- Category rows -->
       <button
-        v-for="cat in categories"
+        v-for="cat in visibleCategories"
         :key="cat.id"
         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:opacity-80"
         :style="cat.id === selectedId ? 'background: var(--color-nav-active-bg)' : ''"
@@ -61,7 +67,7 @@
 
       <!-- Empty state -->
       <p
-        v-if="categories.length === 0"
+        v-if="visibleCategories.length === 0"
         class="py-8 text-center text-sm"
         style="color: var(--color-text-muted)"
       >

@@ -297,7 +297,7 @@
       <button
         type="submit"
         class="btn btn-primary w-full"
-        :disabled="isSubmitting || !name.trim() || (selectedType === 'BOX' && !selectedCategory)"
+        :disabled="isSubmitting || !name.trim() || (isBox && !selectedCategory)"
       >
         <LoadingSpinner v-if="isSubmitting" size="sm" />
         <Icon v-else icon="mdi:plus" class="w-4 h-4" />

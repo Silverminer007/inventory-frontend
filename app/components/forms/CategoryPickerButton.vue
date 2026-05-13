@@ -2,7 +2,11 @@
   import { ref } from 'vue'
   import type { CategoryInfo } from '~/types/inventory'
 
-  defineProps<{ modelValue: CategoryInfo | null; required?: boolean }>()
+  defineProps<{
+    modelValue: CategoryInfo | null
+    required?: boolean
+    categories?: CategoryInfo[]
+  }>()
   const emit = defineEmits<{ 'update:modelValue': [CategoryInfo | null] }>()
 
   const showPicker = ref(false)
@@ -47,6 +51,7 @@
   <CategoryPicker
     v-if="showPicker"
     :selected-id="modelValue?.id"
+    :categories="categories"
     @select="onSelect"
     @close="showPicker = false"
   />
