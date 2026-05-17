@@ -16,12 +16,12 @@
       {
         type: 'BOX' as const,
         label: 'Kisten',
-        items: conflicts.value.filter((r) => r.container?.containerType === 'BOX'),
+        items: conflicts.value.filter((r) => r.container.containerType === 'BOX'),
       },
       {
         type: 'SHELF' as const,
         label: 'Regale',
-        items: conflicts.value.filter((r) => r.container?.containerType === 'SHELF'),
+        items: conflicts.value.filter((r) => r.container.containerType === 'SHELF'),
       },
     ].filter((s) => s.items.length > 0),
   )
@@ -60,7 +60,7 @@
     <!-- No results -->
     <EmptyState
       v-else-if="showEmpty"
-      icon="mdi:text-search"
+      icon="mdi:check-circle-outline"
       title="Keine gemischten Kisten oder Regale"
       data-testid="empty-state"
     />
@@ -84,8 +84,8 @@
         <div class="space-y-2">
           <NuxtLink
             v-for="r in section.items"
-            :key="r.container!.id"
-            :to="`/containers/${r.container!.id}`"
+            :key="r.container.id"
+            :to="`/containers/${r.container.id}`"
             class="card flex items-center gap-3 active:opacity-70 transition-opacity"
           >
             <Icon
@@ -95,7 +95,7 @@
             />
             <div class="flex-1 min-w-0">
               <p class="font-medium truncate" style="color: var(--color-text-primary)">
-                {{ r.container?.name }}
+                {{ r.container.name }}
                 <span
                   class="px-2 py-0.5 rounded-full text-xs font-medium"
                   style="background: var(--color-surface-2); color: var(--color-text-muted)"
@@ -110,8 +110,8 @@
               >
                 {{ r.breadcrumb.map((c) => c.name).join(' → ') }}
               </p>
-              <Badge v-if="r.container!.primaryCategory" variant="purple" class="mt-1">
-                {{ r.container!.primaryCategory.name }}
+              <Badge v-if="r.container.primaryCategory" variant="purple" class="mt-1">
+                {{ r.container.primaryCategory.name }}
               </Badge>
             </div>
             <Icon

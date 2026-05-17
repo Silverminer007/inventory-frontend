@@ -42,8 +42,8 @@
   })
   navItems.push({
     to: '/mixed-categories',
-    icon: 'mdi:inbox-outline',
-    iconActive: 'mdi:inbox',
+    icon: 'mdi:tag-off-outline',
+    iconActive: 'mdi:tag-off',
     label: 'Unsortiert',
   })
   if (scannerAvailable.value) {

@@ -3,7 +3,7 @@ import { getBreadcrumb } from '~/utils/containerUtils'
 import type { Container } from '~/types/inventory'
 
 export interface CategoryConflict {
-  container?: Container
+  container: Container
   categoryCount: number
   breadcrumb: { id: string; name: string; type: string }[]
 }
@@ -23,7 +23,7 @@ export function useMixedCategories() {
         if (cat) categories.add(cat)
       }
 
-      const childItems = (await db.getItemsByContainer(container.id)) || []
+      const childItems = await db.getItemsByContainer(container.id)
       for (const childItem of childItems) {
         const cat = childItem.category?.shortCode
         if (cat) categories.add(cat)
@@ -37,7 +37,7 @@ export function useMixedCategories() {
         breadcrumb: container.parentContainerId
           ? getBreadcrumb(container.parentContainerId, containers)
           : [],
-      } as CategoryConflict)
+      })
     }
 
     return conflicts.sort((a, b) => b.categoryCount - a.categoryCount)
