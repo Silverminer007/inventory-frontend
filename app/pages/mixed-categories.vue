@@ -9,7 +9,7 @@
   const isLoading = ref(false)
   const conflicts = ref<CategoryConflict[]>([])
 
-  const showEmpty = computed(() => !isLoading.value && conflicts.value.length === 0)
+  const showEmpty = computed(() => !isLoading.value && !error.value && conflicts.value.length === 0)
 
   const sections = computed(() =>
     [

@@ -1,11 +1,12 @@
 import { useDatabase } from '~/composables/useDatabase'
-import { getBreadcrumb } from '~/utils/containerUtils'
+import { getBreadcrumb, type ContainerType } from '~/utils/containerUtils'
+import type { UUID } from '~/utils/uuid'
 import type { Container } from '~/types/inventory'
 
 export interface CategoryConflict {
   container: Container
   categoryCount: number
-  breadcrumb: { id: string; name: string; type: string }[]
+  breadcrumb: { id: UUID; name: string; type: ContainerType }[]
 }
 
 export function useMixedCategories() {
