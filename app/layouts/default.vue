@@ -40,6 +40,12 @@
     iconActive: 'mdi:tag-multiple',
     label: 'Kategorien',
   })
+  navItems.push({
+    to: '/mixed-categories',
+    icon: 'mdi:tag-off-outline',
+    iconActive: 'mdi:tag-off',
+    label: 'Unsortiert',
+  })
   if (scannerAvailable.value) {
     navItems.push({
       to: '/scan',
